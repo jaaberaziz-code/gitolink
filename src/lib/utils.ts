@@ -24,18 +24,21 @@ export function formatDate(date: Date | string): string {
 }
 
 export const themes = [
-  { id: 'gradient-1', name: 'Purple Dream', class: 'gradient-bg' },
-  { id: 'gradient-2', name: 'Pink Sunset', class: 'gradient-bg-2' },
-  { id: 'gradient-3', name: 'Ocean Blue', class: 'gradient-bg-3' },
-  { id: 'gradient-4', name: 'Mint Fresh', class: 'gradient-bg-4' },
-  { id: 'gradient-5', name: 'Candy Pop', class: 'gradient-bg-5' },
-  { id: 'gradient-6', name: 'Deep Space', class: 'gradient-bg-6' },
-  { id: 'gradient-7', name: 'Soft Pastel', class: 'gradient-bg-7' },
-  { id: 'gradient-8', name: 'Rose Blush', class: 'gradient-bg-8' },
-  { id: 'gradient-9', name: 'Midnight', class: 'gradient-bg-9' },
-  { id: 'gradient-10', name: 'Forest', class: 'gradient-bg-10' },
-  { id: 'white', name: 'Clean White', class: 'bg-white text-gray-900' },
-  { id: 'dark', name: 'Dark Mode', class: 'bg-gray-900 text-white' },
+  { id: 'gradient-1', name: 'Neon Purple', class: 'bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600' },
+  { id: 'gradient-2', name: 'Sunset Vibes', class: 'bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600' },
+  { id: 'gradient-3', name: 'Ocean Blue', class: 'bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600' },
+  { id: 'gradient-4', name: 'Forest Green', class: 'bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600' },
+  { id: 'gradient-5', name: 'Cherry Pop', class: 'bg-gradient-to-br from-rose-400 via-red-500 to-pink-600' },
+  { id: 'gradient-6', name: 'Midnight Dark', class: 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' },
+  { id: 'gradient-7', name: 'Golden Hour', class: 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500' },
+  { id: 'gradient-8', name: 'Berry Smooth', class: 'bg-gradient-to-br from-fuchsia-400 via-purple-500 to-indigo-500' },
+  { id: 'gradient-9', name: 'Tropical Teal', class: 'bg-gradient-to-br from-teal-300 via-cyan-400 to-blue-500' },
+  { id: 'gradient-10', name: 'Rose Gold', class: 'bg-gradient-to-br from-rose-300 via-pink-400 to-purple-400' },
+  { id: 'gradient-11', name: 'Electric Blue', class: 'bg-gradient-to-br from-blue-400 via-indigo-500 to-violet-600' },
+  { id: 'gradient-12', name: 'Magma Heat', class: 'bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500' },
+  { id: 'white', name: 'Clean White', class: 'bg-gray-50 text-gray-900' },
+  { id: 'dark', name: 'Midnight Black', class: 'bg-gray-950 text-white' },
+  { id: 'glass', name: 'Glass Morph', class: 'bg-white/10 backdrop-blur-xl' },
 ]
 
 export function getThemeClass(themeId: string): string {
