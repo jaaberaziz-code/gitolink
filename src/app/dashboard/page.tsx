@@ -14,7 +14,6 @@ import {
   FiImage,
   FiTrendingUp,
   FiUser,
-  FiSparkles,
   FiLink,
   FiSettings,
   FiEye,
@@ -22,9 +21,7 @@ import {
   FiEdit2,
   FiCheck,
   FiX,
-  FiChevronUp,
-  FiChevronDown,
-  FiSmartphone
+  FiSmartphone,
 } from 'react-icons/fi'
 import {
   FaGlobe,
@@ -63,6 +60,13 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useSortable } from '@dnd-kit/sortable'
 import { themes } from '@/lib/utils'
+
+// Import new components
+import { ProfileImageUpload } from '@/components/dashboard/ProfileImageUpload'
+import { BackgroundCustomizer } from '@/components/dashboard/BackgroundCustomizer'
+import { LivePreview } from '@/components/dashboard/LivePreview'
+import { ThemeGrid } from '@/components/dashboard/ThemeGrid'
+import { CustomCSSEditor } from '@/components/dashboard/CustomCSSEditor'
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -230,87 +234,7 @@ function SortableLinkItem({
   )
 }
 
-// Mobile Mockup Preview
-function MobilePreview({ user, links, theme }: { user: User, links: LinkType[], theme: string }) {
-  const themeObj = themes.find(t => t.id === theme) || themes[0]
-  const isLight = theme === 'minimal'
-  const textColor = isLight ? 'text-gray-900' : 'text-white'
-  const subTextColor = isLight ? 'text-gray-600' : 'text-white/70'
-  const activeLinks = links.filter(l => l.active)
-
-  return (
-    <div className="relative">
-      <div className="w-[280px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl shadow-black/50 mx-auto">
-        <div 
-          className={`relative overflow-hidden rounded-[2rem] ${themeObj.class}`}
-          style={{ height: '560px' }}
-        >
-          {/* Notch */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 w-24 h-6 bg-black rounded-b-xl" />
-          
-          {/* Status Bar */}
-          <div className={`absolute top-2 left-4 right-4 z-10 flex justify-between items-center text-xs font-semibold ${textColor}`}>
-            <span>9:41</span>
-            <div className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5z" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="h-full overflow-y-auto scrollbar-hide pt-12 pb-6 px-4">
-            {/* Profile */}
-            <div className="text-center mb-6">
-              <div className={`w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold ${isLight ? 'bg-white shadow-lg' : 'bg-white/20 backdrop-blur-md border-2 border-white/30'}`}>
-                <span className={textColor}>{user.name?.[0] || user.username[0].toUpperCase()}</span>
-              </div>
-              <h1 className={`text-lg font-bold ${textColor} mb-1`}>{user.name || user.username}</h1>
-              <p className={`text-sm ${subTextColor} mb-2`}>@{user.username}</p>
-              {user.bio && (
-                <p className={`text-xs ${subTextColor} max-w-[200px] mx-auto leading-relaxed`}>{user.bio}</p>
-              )}
-            </div>
-
-            {/* Links */}
-            <div className="space-y-2.5">
-              {activeLinks.length === 0 ? (
-                <div className={`text-center py-8 ${subTextColor} text-sm`}>No active links</div>
-              ) : (
-                activeLinks.map((link, i) => {
-                  const Icon = link.icon ? iconMap[link.icon] : FaGlobe
-                  return (
-                    <motion.div
-                      key={link.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className={`w-full ${isLight ? 'bg-white/80' : 'bg-white/10'} backdrop-blur-md rounded-xl p-3 flex items-center gap-3`}
-                    >
-                      <div className={`w-10 h-10 rounded-full ${isLight ? 'bg-gray-100' : 'bg-white/20'} flex items-center justify-center flex-shrink-0`}>
-                        {Icon && <Icon className={`w-5 h-5 ${textColor}`} />}
-                      </div>
-                      <span className={`flex-1 text-sm font-medium truncate ${textColor}`}>{link.title}</span>
-                    </motion.div>
-                  )
-                })
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="mt-8 text-center">
-              <span className={`text-[10px] ${subTextColor}`}>Powered by GitoLink</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-4 bg-black/30 blur-xl rounded-full" />
-    </div>
-  )
-}
-
-type TabType = 'links' | 'appearance' | 'analytics'
+type TabType = 'links' | 'appearance' | 'analytics' | 'customize'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -319,13 +243,18 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('links')
   const [previewTheme, setPreviewTheme] = useState<string | null>(null)
+  const [previewBackground, setPreviewBackground] = useState<{ type: 'gradient' | 'solid' | 'image', value: string } | null>(null)
+  const [previewAvatar, setPreviewAvatar] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [newLinkTitle, setNewLinkTitle] = useState('')
   const [newLinkUrl, setNewLinkUrl] = useState('')
   const [newLinkIcon, setNewLinkIcon] = useState('website')
-  const [hoveredTheme, setHoveredTheme] = useState<string | null>(null)
-
-  const displayTheme = hoveredTheme || previewTheme || user?.theme || 'cyberpunk'
+  
+  // Profile settings state
+  const [profileName, setProfileName] = useState('')
+  const [profileBio, setProfileBio] = useState('')
+  const [customCSS, setCustomCSS] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     fetchUser()
@@ -342,6 +271,14 @@ export default function DashboardPage() {
       const data = await res.json()
       setUser(data.user)
       setPreviewTheme(data.user.theme)
+      setPreviewBackground({
+        type: data.user.background_type || 'gradient',
+        value: data.user.background_value || data.user.theme || 'cyberpunk'
+      })
+      setPreviewAvatar(data.user.avatar_url || null)
+      setProfileName(data.user.name || '')
+      setProfileBio(data.user.bio || '')
+      setCustomCSS(data.user.custom_css || '')
     } catch {
       router.push('/login')
     }
@@ -479,6 +416,92 @@ export default function DashboardPage() {
     }
   }
 
+  const handleAvatarUpload = async (url: string) => {
+    setPreviewAvatar(url || null)
+    
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: url }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setUser(data.user)
+      } else {
+        throw new Error('Failed to update avatar')
+      }
+    } catch {
+      toast.error('Failed to update avatar')
+    }
+  }
+
+  const handleBackgroundChange = async (type: 'gradient' | 'solid' | 'image', value: string) => {
+    setPreviewBackground({ type, value })
+    
+    try {
+      // If it's an image, it was already uploaded via the BackgroundCustomizer
+      if (type === 'image') {
+        const res = await fetch('/api/upload/background', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, value }),
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setUser(data.user)
+        }
+      } else {
+        // For gradient or solid, update directly
+        const res = await fetch('/api/auth/me', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            background_type: type, 
+            background_value: value 
+          }),
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setUser(data.user)
+        }
+      }
+    } catch {
+      toast.error('Failed to update background')
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true)
+    
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: profileName, 
+          bio: profileBio,
+          custom_css: customCSS 
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setUser(data.user)
+        toast.success('Profile updated!')
+      } else {
+        throw new Error('Failed to update')
+      }
+    } catch {
+      toast.error('Failed to update profile')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -523,14 +546,9 @@ export default function DashboardPage() {
   const navItems = [
     { id: 'links' as TabType, label: 'My Links', icon: FiLink, count: links.length },
     { id: 'appearance' as TabType, label: 'Appearance', icon: FiImage },
+    { id: 'customize' as TabType, label: 'Customize', icon: FiSettings },
     { id: 'analytics' as TabType, label: 'Analytics', icon: FiTrendingUp },
   ]
-
-  const gradientThemes = themes.filter(t => t.id.startsWith('gradient') || 
-    ['cyberpunk', 'matrix', 'sunset', 'tropical', 'desert', 'corporate', 'aurora', 
-     'cotton-candy', 'retro', 'forest', 'ocean', 'lavender', 'gold', 'rose-gold', 'midnight', 'executive'].includes(t.id))
-  const solidThemes = themes.filter(t => ['minimal', 'white'].includes(t.id))
-  const specialThemes = themes.filter(t => ['glass', 'rainbow'].includes(t.id))
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -600,14 +618,14 @@ export default function DashboardPage() {
             {/* Profile Card */}
             <div className="glass-card rounded-2xl p-6">
               <div className="text-center">
-                <motion.div 
-                  whileHover={{ scale: 1.05 }}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/25"
-                >
-                  {user.name?.[0] || user.username[0].toUpperCase()}
-                </motion.div>
+                <ProfileImageUpload
+                  currentAvatar={previewAvatar}
+                  userId={user.id}
+                  onUpload={handleAvatarUpload}
+                  name={user.name || user.username}
+                />
                 
-                <h2 className="text-xl font-semibold text-white mb-1">{user.name || user.username}</h2>
+                <h2 className="text-xl font-semibold text-white mb-1 mt-4">{user.name || user.username}</h2>
                 <p className="text-gray-400 text-sm">@{user.username}</p>
               </div>
 
@@ -680,6 +698,7 @@ export default function DashboardPage() {
             className="min-h-[600px]"
           >
             <AnimatePresence mode="wait">
+              {/* Links Tab */}
               {activeTab === 'links' && (
                 <motion.div
                   key="links"
@@ -757,6 +776,7 @@ export default function DashboardPage() {
                 </motion.div>
               )}
 
+              {/* Appearance Tab */}
               {activeTab === 'appearance' && (
                 <motion.div
                   key="appearance"
@@ -782,7 +802,8 @@ export default function DashboardPage() {
                         <label className="block text-sm font-medium text-gray-400 mb-2">Display Name</label>
                         <input
                           type="text"
-                          defaultValue={user.name || ''}
+                          value={profileName}
+                          onChange={(e) => setProfileName(e.target.value)}
                           className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-all"
                           placeholder="John Doe"
                         />
@@ -799,7 +820,8 @@ export default function DashboardPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-400 mb-2">Bio</label>
                       <textarea
-                        defaultValue={user.bio || ''}
+                        value={profileBio}
+                        onChange={(e) => setProfileBio(e.target.value)}
                         rows={3}
                         className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-all resize-none"
                         placeholder="Tell us about yourself..."
@@ -809,97 +831,75 @@ export default function DashboardPage() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-2.5 rounded-xl font-medium transition-all"
-                      onClick={() => toast.success('Profile settings saved!')}
+                      onClick={handleSaveProfile}
+                      disabled={isSaving}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-2.5 rounded-xl font-medium transition-all disabled:opacity-50"
                     >
-                      Save Changes
+                      {isSaving ? 'Saving...' : 'Save Changes'}
                     </motion.button>
                   </div>
 
-                  {/* Theme Selector */}
+                  {/* Background Customizer */}
                   <div className="glass-card rounded-2xl p-6">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-6">
                       <FiImage className="w-5 h-5 text-purple-400" />
-                      Choose Theme
+                      Background
                     </h3>
 
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-400 mb-3">Gradient Themes</h4>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                          {gradientThemes.map((theme) => (
-                            <motion.button
-                              key={theme.id}
-                              onClick={() => handleThemeChange(theme.id)}
-                              onMouseEnter={() => setHoveredTheme(theme.id)}
-                              onMouseLeave={() => setHoveredTheme(null)}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className={`relative h-16 rounded-xl overflow-hidden transition-all ${
-                                displayTheme === theme.id
-                                  ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-[#0a0a0f]'
-                                  : ''
-                              }`}
-                            >
-                              <div className={`absolute inset-0 ${theme.class}`} />
-                              <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white drop-shadow-md">
-                                {theme.name}
-                              </span>
-                              
-                              {displayTheme === theme.id && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="absolute top-1 right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
-                                >
-                                  <FiCheck className="w-3 h-3 text-white" />
-                                </motion.div>
-                              )}
-                            </motion.button>
-                          ))}
-                        </div>
-                      </div>
+                    <BackgroundCustomizer
+                      currentType={previewBackground?.type || user.background_type || 'gradient'}
+                      currentValue={previewBackground?.value || user.background_value || user.theme || 'cyberpunk'}
+                      userId={user.id}
+                      onChange={handleBackgroundChange}
+                    />
+                  </div>
+                </motion.div>
+              )}
 
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-400 mb-3">Solid Themes</h4>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                          {solidThemes.map((theme) => (
-                            <motion.button
-                              key={theme.id}
-                              onClick={() => handleThemeChange(theme.id)}
-                              onMouseEnter={() => setHoveredTheme(theme.id)}
-                              onMouseLeave={() => setHoveredTheme(null)}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className={`relative h-16 rounded-xl overflow-hidden transition-all ${
-                                displayTheme === theme.id
-                                  ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-[#0a0a0f]'
-                                  : ''
-                              }`}
-                            >
-                              <div className={`absolute inset-0 ${theme.class}`} />
-                              <span className={`absolute inset-0 flex items-center justify-center text-xs font-medium drop-shadow-md ${theme.id === 'minimal' ? 'text-gray-900' : 'text-white'}`}>
-                                {theme.name}
-                              </span>
-                              
-                              {displayTheme === theme.id && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="absolute top-1 right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
-                                >
-                                  <FiCheck className="w-3 h-3 text-white" />
-                                </motion.div>
-                              )}
-                            </motion.button>
-                          ))}
-                        </div>
-                      </div>
+              {/* Customize Tab (Themes) */}
+              {activeTab === 'customize' && (
+                <motion.div
+                  key="customize"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-6"
+                >
+                  <div>
+                    <h1 className="text-2xl font-bold text-white">Themes</h1>
+                    <p className="text-gray-400 text-sm">Choose from our collection of beautiful themes</p>
+                  </div>
+
+                  <div className="glass-card rounded-2xl p-6">
+                    <ThemeGrid
+                      currentTheme={previewTheme || user.theme || 'cyberpunk'}
+                      onThemeChange={handleThemeChange}
+                    />
+                  </div>
+
+                  {/* Custom CSS */}
+                  <div className="glass-card rounded-2xl p-6">
+                    <CustomCSSEditor
+                      value={customCSS}
+                      onChange={setCustomCSS}
+                    />
+                    
+                    <div className="mt-4 flex justify-end">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleSaveProfile}
+                        disabled={isSaving}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-2.5 rounded-xl font-medium transition-all disabled:opacity-50"
+                      >
+                        {isSaving ? 'Saving...' : 'Save CSS'}
+                      </motion.button>
                     </div>
                   </div>
                 </motion.div>
               )}
 
+              {/* Analytics Tab */}
               {activeTab === 'analytics' && (
                 <motion.div
                   key="analytics"
@@ -916,7 +916,7 @@ export default function DashboardPage() {
                     {[
                       { label: 'Total Clicks', value: links.reduce((acc, l) => acc + (l._count?.clicks || 0), 0), icon: FiTrendingUp, color: 'from-blue-500 to-cyan-500' },
                       { label: 'Active Links', value: links.filter(l => l.active).length, icon: FiLink, color: 'from-purple-500 to-pink-500' },
-                      { label: 'Total Links', value: links.length, icon: FiLayers, color: 'from-orange-500 to-red-500' },
+                      { label: 'Total Links', value: links.length, icon: FiLink, color: 'from-orange-500 to-red-500' },
                     ].map((stat, i) => (
                       <motion.div
                         key={stat.label}
@@ -958,28 +958,18 @@ export default function DashboardPage() {
                     <FiSmartphone className="w-5 h-5 text-blue-400" />
                     <span className="text-white font-medium">Live Preview</span>
                   </div>
-                  <motion.div
-                    key={displayTheme}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-gray-400"
-                  >
-                    {themes.find(t => t.id === displayTheme)?.name}
-                  </motion.div>
                 </div>
 
-                <motion.div
-                  key={displayTheme}
-                  initial={{ opacity: 0.8, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                >
-                  <MobilePreview 
-                    user={user} 
-                    links={links} 
-                    theme={displayTheme} 
-                  />
-                </motion.div>
+                <LivePreview
+                  user={{ ...user, name: profileName || user.name, bio: profileBio || user.bio }}
+                  links={links}
+                  previewTheme={previewTheme}
+                  previewBackground={previewBackground || { 
+                    type: user.background_type as 'gradient' | 'solid' | 'image', 
+                    value: user.background_value || user.theme 
+                  }}
+                  previewAvatar={previewAvatar}
+                />
               </div>
             </div>
           </motion.aside>

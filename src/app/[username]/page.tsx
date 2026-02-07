@@ -22,7 +22,8 @@ import {
 } from 'react-icons/fa'
 import { FiMail, FiPhone } from 'react-icons/fi'
 import type { ProfileData } from '@/types'
-import { getThemeClass } from '@/lib/utils'
+import { themes } from '@/lib/utils'
+import Image from 'next/image'
 
 const iconMap: Record<string, React.ComponentType> = {
   website: FaGlobe,
@@ -110,78 +111,160 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const { user, links } = profile
-  const themeClass = getThemeClass(user.theme)
-  const isGradient = user.theme.startsWith('gradient')
+  
+  // Determine background styles
+  const getBackgroundStyle = () => {
+    const bgType = user.background_type || 'gradient'
+    const bgValue = user.background_value || user.theme || 'cyberpunk'
+
+    if (bgType === 'image' && bgValue) {
+      return {
+        backgroundImage: `url(${bgValue})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }
+    }
+    
+    if (bgType === 'solid' && bgValue) {
+      return { backgroundColor: bgValue }
+    }
+    
+    return {}
+  }
+
+  const getThemeClass = () => {
+    const bgType = user.background_type || 'gradient'
+    const bgValue = user.background_value || user.theme || 'cyberpunk'
+
+    if (bgType === 'gradient' || bgType === 'solid') {
+      const theme = themes.find(t => t.id === bgValue)
+      if (theme) {
+        return theme.class
+      }
+    }
+    
+    // Find theme by user.theme if no background_value matches
+    const theme = themes.find(t => t.id === user.theme)
+    return theme?.class || 'bg-gradient-to-br from-purple-600 to-blue-600'
+  }
+
+  const themeId = user.theme || 'cyberpunk'
+  const isLight = themeId === 'minimal'
+  const textColor = isLight ? 'text-gray-900' : 'text-white'
+  const subTextColor = isLight ? 'text-gray-600' : 'text-white/80'
+  const bgType = user.background_type || 'gradient'
+  const showCustomCSS = user.custom_css && user.custom_css.trim().length > 0
 
   return (
-    <div className={`min-h-screen ${themeClass} ${isGradient ? '' : 'bg-gray-900'}`}>
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        {/* Profile Header */}
-        <div className="text-center mb-8">
-          <div className="w-24 h-24 rounded-full bg-white/20 mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-white backdrop-blur-sm border-2 border-white/30">
-            {user.name?.[0] || user.username[0].toUpperCase()}
+    <>
+      {/* Custom CSS Injection */}
+      {showCustomCSS && (
+        <style dangerouslySetInnerHTML={{ __html: user.custom_css }} />
+      )}
+
+      <div 
+        className={`min-h-screen ${getThemeClass()}`}
+        style={getBackgroundStyle()}
+      >
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          {/* Profile Header */}
+          <div className="text-center mb-8">
+            <div className={`
+              w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold
+              overflow-hidden
+              ${isLight ? 'bg-white shadow-lg' : 'bg-white/20 backdrop-blur-sm border-2 border-white/30'}
+            `}>
+              {user.avatar_url || user.avatar ? (
+                <Image
+                  src={user.avatar_url || user.avatar || ''}
+                  alt={user.name || user.username}
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className={textColor}>
+                  {(user.name?.[0] || user.username[0])?.toUpperCase()}
+                </span>
+              )}
+            </div>
+
+            <h1 className={`text-2xl font-bold ${textColor} mb-2 drop-shadow-lg`}>
+              {user.name || user.username}
+            </h1>
+
+            <p className={`${subTextColor} mb-4`}>@{user.username}</p>
+
+            {user.bio && (
+              <p className={`${subTextColor} max-w-md mx-auto drop-shadow`}>{user.bio}</p>
+            )}
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">
-            {user.name || user.username}
-          </h1>
+          {/* Links */}
+          <div className="space-y-4">
+            {links.map((link) => {
+              const Icon = link.icon ? iconMap[link.icon] : FaGlobe
 
-          <p className="text-white/80 mb-4">@{user.username}</p>
+              return (
+                <button
+                  key={link.id}
+                  onClick={() => handleLinkClick(link.id, link.url)}
+                  className={`
+                    w-full rounded-xl p-4 flex items-center gap-4 group transition-all hover:scale-[1.02]
+                    ${isLight 
+                      ? 'bg-white/90 hover:bg-white shadow-md' 
+                      : 'glass hover:bg-white/20'
+                    }
+                    link-button
+                  `}
+                >
+                  <div className={`
+                    w-12 h-12 rounded-full flex items-center justify-center
+                    ${isLight ? 'bg-gray-100' : 'bg-white/20'}
+                  `}>
+                    {Icon && <Icon className={`w-6 h-6 ${textColor}`} />}
+                  </div>
 
-          {user.bio && (
-            <p className="text-white/90 max-w-md mx-auto drop-shadow">{user.bio}</p>
-          )}
-        </div>
+                  <span className={`flex-1 text-lg font-medium text-left drop-shadow ${textColor}`}>
+                    {link.title}
+                  </span>
 
-        {/* Links */}
-        <div className="space-y-4">
-          {links.map((link) => {
-            const Icon = link.icon ? iconMap[link.icon] : FaGlobe
+                  <div className={`
+                    w-8 h-8 rounded-full flex items-center justify-center
+                    opacity-0 group-hover:opacity-100 transition-opacity
+                    ${isLight ? 'bg-gray-100' : 'bg-white/20'}
+                  `}>
+                    <svg
+                      className={`w-4 h-4 ${textColor}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
 
-            return (
-              <button
-                key={link.id}
-                onClick={() => handleLinkClick(link.id, link.url)}
-                className="w-full glass rounded-xl p-4 flex items-center gap-4 group transition-all hover:scale-[1.02] hover:bg-white/20"
-              >
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                  {Icon && <Icon className="w-6 h-6 text-white" />}
-                </div>
-
-                <span className="flex-1 text-lg font-medium text-white text-left drop-shadow">
-                  {link.title}
-                </span>
-
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-12 text-center">
-          <a
-            href="/"
-            className="text-white/60 hover:text-white transition-colors text-sm"
-          >
-            Powered by GitoLink
-          </a>
+          {/* Footer */}
+          <div className="mt-12 text-center gitolink-footer">
+            <a
+              href="/"
+              className={`${subTextColor} hover:text-white transition-colors text-sm`}
+            >
+              Powered by GitoLink
+            </a>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

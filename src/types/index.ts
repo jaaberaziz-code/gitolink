@@ -5,7 +5,11 @@ export interface User {
   name?: string | null
   bio?: string | null
   avatar?: string | null
+  avatar_url?: string | null
   theme: string
+  background_type: 'gradient' | 'solid' | 'image'
+  background_value: string
+  custom_css?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -54,7 +58,22 @@ export interface ProfileData {
     name?: string | null
     bio?: string | null
     avatar?: string | null
+    avatar_url?: string | null
     theme: string
+    background_type: 'gradient' | 'solid' | 'image'
+    background_value: string
+    custom_css?: string | null
   }
   links: Link[]
+}
+
+export interface BackgroundCustomization {
+  type: 'gradient' | 'solid' | 'image'
+  value: string
+}
+
+export interface ProfileCustomization {
+  avatar_url?: string
+  background: BackgroundCustomization
+  custom_css?: string
 }

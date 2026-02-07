@@ -31,7 +31,11 @@ export async function GET(req: NextRequest) {
         name: true,
         bio: true,
         avatar: true,
+        avatar_url: true,
         theme: true,
+        background_type: true,
+        background_value: true,
+        custom_css: true,
       },
     })
 
@@ -79,15 +83,29 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, bio, theme } = body
+    const { 
+      name, 
+      bio, 
+      theme, 
+      avatar_url,
+      background_type,
+      background_value,
+      custom_css 
+    } = body
+
+    const updateData: any = {}
+
+    if (name !== undefined) updateData.name = name
+    if (bio !== undefined) updateData.bio = bio
+    if (theme !== undefined) updateData.theme = theme
+    if (avatar_url !== undefined) updateData.avatar_url = avatar_url
+    if (background_type !== undefined) updateData.background_type = background_type
+    if (background_value !== undefined) updateData.background_value = background_value
+    if (custom_css !== undefined) updateData.custom_css = custom_css
 
     const user = await prisma.user.update({
       where: { id: payload.userId },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(bio !== undefined && { bio }),
-        ...(theme !== undefined && { theme }),
-      },
+      data: updateData,
       select: {
         id: true,
         username: true,
@@ -95,7 +113,11 @@ export async function PUT(req: NextRequest) {
         name: true,
         bio: true,
         avatar: true,
+        avatar_url: true,
         theme: true,
+        background_type: true,
+        background_value: true,
+        custom_css: true,
       },
     })
 

@@ -19,6 +19,8 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^5.7.1",
+    "@supabase/storage-js": "^2.95.3",
+    "@supabase/supabase-js": "^2.95.3",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",

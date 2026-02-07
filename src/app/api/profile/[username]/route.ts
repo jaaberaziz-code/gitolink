@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import UAParser from 'ua-parser-js'
 import { prisma } from '@/lib/prisma'
+import { UAParser } from 'ua-parser-js'
 
 export async function GET(
   req: NextRequest,
@@ -10,26 +10,29 @@ export async function GET(
     const user = await prisma.user.findUnique({
       where: { username: params.username },
       select: {
-        id: true,
         username: true,
         name: true,
         bio: true,
         avatar: true,
+        avatar_url: true,
         theme: true,
+        background_type: true,
+        background_value: true,
+        custom_css: true,
       },
     })
 
     if (!user) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'Profile not found' },
         { status: 404 }
       )
     }
 
     const links = await prisma.link.findMany({
-      where: {
+      where: { 
         userId: user.id,
-        active: true,
+        active: true 
       },
       orderBy: { order: 'asc' },
       select: {
@@ -37,21 +40,14 @@ export async function GET(
         title: true,
         url: true,
         icon: true,
+        order: true,
+        active: true,
       },
     })
 
-    return NextResponse.json({
-      user: {
-        username: user.username,
-        name: user.name,
-        bio: user.bio,
-        avatar: user.avatar,
-        theme: user.theme,
-      },
-      links,
-    })
+    return NextResponse.json({ user, links })
   } catch (error) {
-    console.error('Get profile error:', error)
+    console.error('Profile fetch error:', error)
     return NextResponse.json(
       { error: 'Something went wrong' },
       { status: 500 }
@@ -66,9 +62,17 @@ export async function POST(
   try {
     const { linkId } = await req.json()
 
+    if (!linkId) {
+      return NextResponse.json(
+        { error: 'Link ID required' },
+        { status: 400 }
+      )
+    }
+
+    // Get user
     const user = await prisma.user.findUnique({
       where: { username: params.username },
-      select: { id: true },
+      select: { id: true }
     })
 
     if (!user) {
@@ -78,12 +82,12 @@ export async function POST(
       )
     }
 
+    // Get link to verify it belongs to user
     const link = await prisma.link.findFirst({
-      where: {
+      where: { 
         id: linkId,
-        userId: user.id,
-        active: true,
-      },
+        userId: user.id
+      }
     })
 
     if (!link) {
@@ -97,34 +101,32 @@ export async function POST(
     const userAgent = req.headers.get('user-agent') || ''
     const parser = new UAParser(userAgent)
     const device = parser.getDevice().type || 'desktop'
-    const browser = parser.getBrowser().name || 'Unknown'
-    const os = parser.getOS().name || 'Unknown'
+    const browser = parser.getBrowser().name
+    const os = parser.getOS().name
 
-    // Get IP and location info
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 
+    // Get IP info
+    const ip = req.headers.get('x-forwarded-for') || 
                req.headers.get('x-real-ip') || 
                'unknown'
     
-    const referrer = req.headers.get('referer') || null
-
-    // Create click record
+    // Track click
     await prisma.click.create({
       data: {
         linkId,
         userId: user.id,
-        ip,
+        ip: ip.split(',')[0].trim(),
         device,
         browser,
         os,
-        referrer,
-      },
+        referrer: req.headers.get('referer') || null,
+      }
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Track click error:', error)
+    console.error('Click tracking error:', error)
     return NextResponse.json(
-      { error: 'Something went wrong' },
+      { error: 'Failed to track click' },
       { status: 500 }
     )
   }
