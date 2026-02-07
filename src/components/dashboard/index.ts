@@ -1,5 +1,4 @@
-export { DashboardContent } from './DashboardContent'
-export { LinkForm } from './LinkForm'
+export { AddLinkModal } from './AddLinkModal'
+export { AnalyticsOverview } from './AnalyticsOverview'
 export { LinkList } from './LinkList'
-export { ProfileForm } from './ProfileForm'
-export { ThemeSelector } from './ThemeSelector'
+export { ProfileSettings } from './ProfileSettings'
