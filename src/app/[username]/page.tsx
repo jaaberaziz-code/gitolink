@@ -24,7 +24,7 @@ import { FiMail, FiPhone } from 'react-icons/fi'
 import type { ProfileData } from '@/types'
 import { getThemeClass } from '@/lib/utils'
 
-const iconMap: Record<string, React.ComponentType>any>> = {
+const iconMap: Record<string, React.ComponentType> = {
   website: FaGlobe,
   twitter: FaTwitter,
   instagram: FaInstagram,

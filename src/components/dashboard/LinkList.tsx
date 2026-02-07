@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
-  FiGripVertical,
+  FiMoreVertical,
   FiEdit2,
   FiTrash2,
   FiEye,
@@ -159,7 +159,7 @@ function LinkItem({ link, onUpdate }: LinkItemProps) {
         {...listeners}
         className="text-gray-500 hover:text-gray-300 cursor-grab active:cursor-grabbing"
       >
-        <FiGripVertical className="w-5 h-5" />
+        <FiMoreVertical className="w-5 h-5" />
       </button>
 
       <div className="flex-1 min-w-0">
