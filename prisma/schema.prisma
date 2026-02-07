@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -21,8 +21,6 @@ model User {
 
   links     Link[]
   clicks    Click[]
-  
-  @@map("users")
 }
 
 model Link {
@@ -40,7 +38,6 @@ model Link {
   clicks Click[]
 
   @@index([userId])
-  @@map("links")
 }
 
 model Click {
@@ -62,5 +59,4 @@ model Click {
   @@index([linkId])
   @@index([userId])
   @@index([createdAt])
-  @@map("clicks")
 }
