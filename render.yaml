@@ -9,7 +9,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: "file:./prisma/gitolink.db"
+        value: "file:/tmp/gitolink.db"
       - key: JWT_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
