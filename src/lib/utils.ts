@@ -24,21 +24,38 @@ export function formatDate(date: Date | string): string {
 }
 
 export const themes = [
-  { id: 'gradient-1', name: 'Neon Purple', class: 'bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600' },
-  { id: 'gradient-2', name: 'Sunset Vibes', class: 'bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600' },
-  { id: 'gradient-3', name: 'Ocean Blue', class: 'bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600' },
-  { id: 'gradient-4', name: 'Forest Green', class: 'bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600' },
-  { id: 'gradient-5', name: 'Cherry Pop', class: 'bg-gradient-to-br from-rose-400 via-red-500 to-pink-600' },
-  { id: 'gradient-6', name: 'Midnight Dark', class: 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' },
-  { id: 'gradient-7', name: 'Golden Hour', class: 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500' },
-  { id: 'gradient-8', name: 'Berry Smooth', class: 'bg-gradient-to-br from-fuchsia-400 via-purple-500 to-indigo-500' },
-  { id: 'gradient-9', name: 'Tropical Teal', class: 'bg-gradient-to-br from-teal-300 via-cyan-400 to-blue-500' },
-  { id: 'gradient-10', name: 'Rose Gold', class: 'bg-gradient-to-br from-rose-300 via-pink-400 to-purple-400' },
-  { id: 'gradient-11', name: 'Electric Blue', class: 'bg-gradient-to-br from-blue-400 via-indigo-500 to-violet-600' },
-  { id: 'gradient-12', name: 'Magma Heat', class: 'bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500' },
-  { id: 'white', name: 'Clean White', class: 'bg-gray-50 text-gray-900' },
-  { id: 'dark', name: 'Midnight Black', class: 'bg-gray-950 text-white' },
-  { id: 'glass', name: 'Glass Morph', class: 'bg-white/10 backdrop-blur-xl' },
+  // Gaming & Tech
+  { id: 'cyberpunk', name: 'Cyberpunk Neon', class: 'bg-gradient-to-br from-pink-500 via-purple-500 to-cyan-400' },
+  { id: 'matrix', name: 'Matrix Code', class: 'bg-gradient-to-br from-green-400 via-emerald-600 to-black' },
+  
+  // Lifestyle & Travel  
+  { id: 'sunset', name: 'Sunset Beach', class: 'bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600' },
+  { id: 'tropical', name: 'Tropical Paradise', class: 'bg-gradient-to-br from-teal-300 via-cyan-400 to-blue-500' },
+  { id: 'desert', name: 'Desert Dunes', class: 'bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400' },
+  
+  // Professional
+  { id: 'corporate', name: 'Corporate Blue', class: 'bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-700' },
+  { id: 'minimal', name: 'Minimal White', class: 'bg-gray-50 text-gray-900' },
+  { id: 'executive', name: 'Executive Dark', class: 'bg-gradient-to-br from-slate-800 via-gray-900 to-black' },
+  
+  // Creative & Arts
+  { id: 'aurora', name: 'Aurora Borealis', class: 'bg-gradient-to-br from-green-300 via-blue-500 to-purple-600' },
+  { id: 'cotton-candy', name: 'Cotton Candy', class: 'bg-gradient-to-br from-pink-300 via-purple-300 to-indigo-400' },
+  { id: 'retro', name: 'Retro Wave', class: 'bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400' },
+  
+  // Nature
+  { id: 'forest', name: 'Deep Forest', class: 'bg-gradient-to-br from-emerald-500 via-teal-600 to-green-700' },
+  { id: 'ocean', name: 'Deep Ocean', class: 'bg-gradient-to-br from-cyan-600 via-blue-700 to-indigo-800' },
+  { id: 'lavender', name: 'Lavender Field', class: 'bg-gradient-to-br from-purple-300 via-purple-400 to-pink-300' },
+  
+  // Premium
+  { id: 'gold', name: 'Luxury Gold', class: 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-600' },
+  { id: 'rose-gold', name: 'Rose Gold', class: 'bg-gradient-to-br from-rose-300 via-pink-400 to-purple-400' },
+  { id: 'midnight', name: 'Midnight Purple', class: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900' },
+  
+  // Special
+  { id: 'glass', name: 'Glass Morphism', class: 'bg-white/10 backdrop-blur-xl border border-white/20' },
+  { id: 'rainbow', name: 'Pride Rainbow', class: 'bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500' },
 ]
 
 export function getThemeClass(themeId: string): string {
