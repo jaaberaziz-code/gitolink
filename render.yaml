@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: gitolink
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gitolink-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        value: https://gitolink.onrender.com
+
+databases:
+  - name: gitolink-db
+    databaseName: gitolink
+    user: gitolink
+    plan: free
