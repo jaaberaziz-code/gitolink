@@ -47,6 +47,7 @@ model Link {
   icon      String?
   order     Int      @default(0)
   active    Boolean  @default(true)
+  embedType String?  @map("embed_type") // 'youtube', 'instagram', 'tiktok', or null
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

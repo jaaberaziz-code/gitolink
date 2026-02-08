@@ -48,6 +48,7 @@ export async function GET(
         icon: true,
         order: true,
         active: true,
+        embedType: true,
       },
     })
 

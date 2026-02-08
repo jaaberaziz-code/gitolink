@@ -27,6 +27,7 @@ export interface Link {
   icon?: string | null
   order: number
   active: boolean
+  embedType?: 'youtube' | 'instagram' | 'tiktok' | null
   userId: string
   createdAt: Date
   updatedAt: Date

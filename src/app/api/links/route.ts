@@ -7,6 +7,7 @@ const linkSchema = z.object({
   title: z.string().min(1).max(100),
   url: z.string().url(),
   icon: z.string().optional(),
+  embedType: z.enum(['youtube', 'instagram', 'tiktok']).optional().nullable(),
 })
 
 async function getUser(req: NextRequest) {
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { title, url, icon } = linkSchema.parse(body)
+    const { title, url, icon, embedType } = linkSchema.parse(body)
 
     // Get max order
     const maxOrder = await prisma.link.findFirst({
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
         title,
         url,
         icon,
+        embedType,
         userId: user.userId,
         order: (maxOrder?.order ?? -1) + 1,
       },

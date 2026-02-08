@@ -8,6 +8,7 @@ const linkSchema = z.object({
   url: z.string().url().optional(),
   icon: z.string().optional().nullable(),
   active: z.boolean().optional(),
+  embedType: z.enum(['youtube', 'instagram', 'tiktok']).optional().nullable(),
 })
 
 const reorderSchema = z.object({
@@ -52,7 +53,7 @@ export async function PATCH(
     }
 
     // Handle update
-    const { title, url, icon, active } = linkSchema.parse(body)
+    const { title, url, icon, active, embedType } = linkSchema.parse(body)
 
     const link = await prisma.link.updateMany({
       where: { id: params.id, userId: user.userId },
@@ -61,6 +62,7 @@ export async function PATCH(
         ...(url && { url }),
         ...(icon !== undefined && { icon }),
         ...(active !== undefined && { active }),
+        ...(embedType !== undefined && { embedType }),
       },
     })
 

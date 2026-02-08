@@ -14,7 +14,7 @@ import {
   FiPlus, FiLogOut, FiExternalLink, FiCopy, FiBarChart2, FiImage,
   FiTrendingUp, FiUser, FiLink, FiSettings, FiEye,
   FiTrash2, FiEdit2, FiCheck, FiX, FiChevronUp, FiChevronDown, FiSmartphone, FiLayers,
-  FiLayout, FiType, FiDownload, FiCalendar, FiArrowUp, FiArrowDown
+  FiLayout, FiType, FiDownload, FiCalendar, FiArrowUp, FiArrowDown, FiGrid
 } from 'react-icons/fi'
 import type { User, Link as LinkType, DesignCustomization } from '@/types'
 import { themes } from '@/lib/utils'
@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [analyticsSortBy, setAnalyticsSortBy] = useState<'clicks' | 'name'>('clicks')
   const [analyticsSortOrder, setAnalyticsSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showQRModal, setShowQRModal] = useState(false)
 
   const displayTheme = previewTheme || user?.theme || 'cyberpunk'
 
@@ -436,6 +437,13 @@ export default function DashboardPage() {
                     <FiCopy className="w-4 h-4 text-gray-400 hover:text-white" />
                   </button>
                 </div>
+                <button
+                  onClick={() => setShowQRModal(true)}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all"
+                >
+                  <FiGrid className="w-4 h-4" />
+                  QR Code
+                </button>
               </div>
             </div>
           </aside>
@@ -777,6 +785,15 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* QR Code Generator Modal */}
+      {showQRModal && (
+        <QRCodeGenerator
+          username={user.username}
+          isOpen={showQRModal}
+          onClose={() => setShowQRModal(false)}
+        />
+      )}
     </div>
   )
 }

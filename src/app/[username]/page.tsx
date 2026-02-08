@@ -20,11 +20,15 @@ import {
   FaTelegram,
   FaWhatsapp,
 } from 'react-icons/fa'
-import { FiMail, FiPhone } from 'react-icons/fi'
+import { FiMail, FiPhone, FiEye, FiEyeOff } from 'react-icons/fi'
 import type { ProfileData } from '@/types'
 import { themes } from '@/lib/utils'
 import Image from 'next/image'
 import { ProfilePageSkeleton } from '@/components/ui/Skeleton'
+import { YouTubeEmbed } from '@/components/embeds/YouTubeEmbed'
+import { InstagramEmbed } from '@/components/embeds/InstagramEmbed'
+import { TikTokEmbed } from '@/components/embeds/TikTokEmbed'
+import { detectEmbedType, type EmbedType } from '@/components/embeds'
 
 const iconMap: Record<string, React.ComponentType> = {
   website: FaGlobe,
@@ -49,6 +53,164 @@ const iconMap: Record<string, React.ComponentType> = {
 
 interface ProfilePageProps {
   params: { username: string }
+}
+
+// Link Item Component with Embed Support
+interface LinkItemProps {
+  link: ProfileData['links'][0]
+  isLight: boolean
+  buttonStyle: string
+  buttonColor: string
+  defaultTextColor: string
+  defaultSubTextColor: string
+  onLinkClick: (linkId: string, url: string) => void
+}
+
+function LinkItem({ 
+  link, 
+  isLight, 
+  buttonStyle, 
+  buttonColor, 
+  defaultTextColor,
+  defaultSubTextColor,
+  onLinkClick 
+}: LinkItemProps) {
+  const [showEmbed, setShowEmbed] = useState(() => {
+    // Auto-show embed if embedType is explicitly set
+    return !!link.embedType
+  })
+  
+  const Icon = link.icon ? iconMap[link.icon] : FaGlobe
+  const embedType = link.embedType || detectEmbedType(link.url)
+  const hasEmbed = !!embedType
+
+  // Get button classes based on style
+  const getButtonClass = () => {
+    const baseClass = 'w-full flex items-center gap-4 group transition-all hover:scale-[1.02]'
+    
+    if (buttonStyle === 'glass') {
+      return `${baseClass} rounded-xl p-4 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30`
+    }
+    
+    const bgClass = buttonStyle === 'pill' || buttonStyle === 'rounded'
+      ? '' // Color handled by style
+      : isLight ? 'bg-white/90 hover:bg-white shadow-md' : 'glass hover:bg-white/20'
+    
+    switch (buttonStyle) {
+      case 'pill':
+        return `${baseClass} ${bgClass} rounded-full px-6 py-4`
+      case 'square':
+        return `${baseClass} ${bgClass} rounded-none p-4`
+      case 'rounded':
+      default:
+        return `${baseClass} ${bgClass} rounded-xl p-4`
+    }
+  }
+
+  const getButtonStyle = () => {
+    if (buttonStyle === 'glass') return {}
+    return { backgroundColor: buttonColor }
+  }
+
+  const getTextColor = () => {
+    // For custom colored buttons, determine if we need white or dark text
+    if (buttonStyle !== 'glass') {
+      // Simple luminance check for button text color
+      const hex = buttonColor.replace('#', '')
+      const r = parseInt(hex.substr(0, 2), 16)
+      const g = parseInt(hex.substr(2, 2), 16)
+      const b = parseInt(hex.substr(4, 2), 16)
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+      return luminance > 0.5 ? '#111827' : '#ffffff'
+    }
+    return defaultTextColor
+  }
+
+  const buttonTextColor = getTextColor()
+
+  // Render embed based on type
+  const renderEmbed = () => {
+    switch (embedType) {
+      case 'youtube':
+        return <YouTubeEmbed url={link.url} title={link.title} />
+      case 'instagram':
+        return <InstagramEmbed url={link.url} title={link.title} />
+      case 'tiktok':
+        return <TikTokEmbed url={link.url} title={link.title} />
+      default:
+        return null
+    }
+  }
+
+  if (showEmbed && hasEmbed) {
+    return (
+      <div className="space-y-2">
+        {renderEmbed()}
+        <button
+          onClick={() => setShowEmbed(false)}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mx-auto"
+        >
+          <FiEyeOff className="w-4 h-4" />
+          <span>Hide preview</span>
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={() => onLinkClick(link.id, link.url)}
+        className={getButtonClass()}
+        style={getButtonStyle()}
+      >
+        <div className={`
+          w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
+          ${buttonStyle === 'glass' ? 'bg-white/20' : 'bg-white/20'}
+        `}>
+          {Icon && <Icon className="w-6 h-6" style={{ color: buttonTextColor }} />}
+        </div>
+
+        <span 
+          className="flex-1 text-lg font-medium text-left drop-shadow"
+          style={{ color: buttonTextColor }}
+        >
+          {link.title}
+        </span>
+
+        <div className={`
+          w-8 h-8 rounded-full flex items-center justify-center
+          opacity-0 group-hover:opacity-100 transition-opacity
+          ${buttonStyle === 'glass' ? 'bg-white/20' : 'bg-white/20'}
+        `}>
+          <svg
+            className="w-4 h-4"
+            style={{ color: buttonTextColor }}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
+          </svg>
+        </div>
+      </button>
+      
+      {hasEmbed && (
+        <button
+          onClick={() => setShowEmbed(true)}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mx-auto"
+        >
+          <FiEye className="w-4 h-4" />
+          <span>Show {embedType} preview</span>
+        </button>
+      )}
+    </div>
+  )
 }
 
 export default function ProfilePage({ params }: ProfilePageProps) {
@@ -173,53 +335,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const buttonStyle = user.button_style || 'rounded'
   const buttonColor = user.button_color || '#3b82f6'
 
-  // Get button classes based on style
-  const getButtonClass = () => {
-    const baseClass = 'w-full flex items-center gap-4 group transition-all hover:scale-[1.02]'
-    
-    if (buttonStyle === 'glass') {
-      return `${baseClass} rounded-xl p-4 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30`
-    }
-    
-    const bgClass = buttonStyle === 'pill' || buttonStyle === 'rounded'
-      ? '' // Color handled by style
-      : isLight ? 'bg-white/90 hover:bg-white shadow-md' : 'glass hover:bg-white/20'
-    
-    switch (buttonStyle) {
-      case 'pill':
-        return `${baseClass} ${bgClass} rounded-full px-6 py-4`
-      case 'square':
-        return `${baseClass} ${bgClass} rounded-none p-4`
-      case 'rounded':
-      default:
-        return `${baseClass} ${bgClass} rounded-xl p-4`
-    }
-  }
-
-  const getButtonStyle = () => {
-    if (buttonStyle === 'glass') return {}
-    return { backgroundColor: buttonColor }
-  }
-
-  const getTextColor = () => {
-    // For custom colored buttons, determine if we need white or dark text
-    if (buttonStyle !== 'glass') {
-      // Simple luminance check for button text color
-      const hex = buttonColor.replace('#', '')
-      const r = parseInt(hex.substr(0, 2), 16)
-      const g = parseInt(hex.substr(2, 2), 16)
-      const b = parseInt(hex.substr(4, 2), 16)
-      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-      return luminance > 0.5 ? '#111827' : '#ffffff'
-    }
-    return defaultTextColor
-  }
-
   return (
     <>
       {/* Custom CSS Injection */}
       {showCustomCSS && (
-        <style dangerouslySetInnerHTML={{ __html: user.custom_css }} />
+        <style dangerouslySetInnerHTML={{ __html: user.custom_css || '' }} />
       )}
 
       <div 
@@ -325,55 +445,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           )}
 
           {/* Links */}
-          <div className="space-y-4">
-            {links.map((link) => {
-              const Icon = link.icon ? iconMap[link.icon] : FaGlobe
-              const buttonTextColor = getTextColor()
-
-              return (
-                <button
-                  key={link.id}
-                  onClick={() => handleLinkClick(link.id, link.url)}
-                  className={getButtonClass()}
-                  style={getButtonStyle()}
-                >
-                  <div className={`
-                    w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
-                    ${buttonStyle === 'glass' ? 'bg-white/20' : 'bg-white/20'}
-                  `}>
-                    {Icon && <Icon className="w-6 h-6" style={{ color: buttonTextColor }} />}
-                  </div>
-
-                  <span 
-                    className="flex-1 text-lg font-medium text-left drop-shadow"
-                    style={{ color: buttonTextColor }}
-                  >
-                    {link.title}
-                  </span>
-
-                  <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center
-                    opacity-0 group-hover:opacity-100 transition-opacity
-                    ${buttonStyle === 'glass' ? 'bg-white/20' : 'bg-white/20'}
-                  `}>
-                    <svg
-                      className="w-4 h-4"
-                      style={{ color: buttonTextColor }}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </div>
-                </button>
-              )
-            })}
+          <div className="space-y-6">
+            {links.map((link) => (
+              <LinkItem
+                key={link.id}
+                link={link}
+                isLight={isLight}
+                buttonStyle={buttonStyle}
+                buttonColor={buttonColor}
+                defaultTextColor={defaultTextColor}
+                defaultSubTextColor={defaultSubTextColor}
+                onLinkClick={handleLinkClick}
+              />
+            ))}
           </div>
 
           {/* Footer */}
