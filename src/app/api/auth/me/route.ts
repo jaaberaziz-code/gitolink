@@ -104,6 +104,34 @@ export async function PUT(req: NextRequest) {
       button_color,
     } = body
 
+    // Validation constants
+    const validThemes = ['cyberpunk', 'matrix', 'sunset', 'tropical', 'desert', 'corporate', 'minimal', 'executive', 'aurora', 'cotton-candy', 'retro', 'forest', 'ocean', 'lavender', 'gold', 'rose-gold', 'midnight', 'glass', 'rainbow']
+    const validLayouts = ['classic', 'hero', 'minimal']
+    const validButtonStyles = ['rounded', 'pill', 'square', 'glass']
+    const validBackgroundTypes = ['gradient', 'solid', 'image']
+    
+    // Validate inputs
+    if (theme !== undefined && !validThemes.includes(theme)) {
+      return NextResponse.json({ error: 'Invalid theme' }, { status: 400 })
+    }
+    if (layout !== undefined && !validLayouts.includes(layout)) {
+      return NextResponse.json({ error: 'Invalid layout' }, { status: 400 })
+    }
+    if (button_style !== undefined && !validButtonStyles.includes(button_style)) {
+      return NextResponse.json({ error: 'Invalid button style' }, { status: 400 })
+    }
+    if (background_type !== undefined && !validBackgroundTypes.includes(background_type)) {
+      return NextResponse.json({ error: 'Invalid background type' }, { status: 400 })
+    }
+    // Validate hex colors
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/
+    if (title_color !== undefined && !hexColorRegex.test(title_color)) {
+      return NextResponse.json({ error: 'Invalid title color (must be hex #RRGGBB)' }, { status: 400 })
+    }
+    if (button_color !== undefined && !hexColorRegex.test(button_color)) {
+      return NextResponse.json({ error: 'Invalid button color (must be hex #RRGGBB)' }, { status: 400 })
+    }
+
     const updateData: any = {}
 
     if (name !== undefined) updateData.name = name

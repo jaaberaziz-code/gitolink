@@ -17,7 +17,7 @@ model User {
   bio             String?
   avatar          String?
   avatar_url      String?  // Supabase Storage URL for avatar
-  theme           String   @default("gradient-1")
+  theme           String   @default("cyberpunk")
   
   // Background customization
   background_type  String   @default("gradient") // 'gradient', 'solid', 'image'
