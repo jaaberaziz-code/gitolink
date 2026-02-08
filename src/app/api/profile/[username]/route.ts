@@ -10,6 +10,7 @@ export async function GET(
     const user = await prisma.user.findUnique({
       where: { username: params.username },
       select: {
+        id: true,
         username: true,
         name: true,
         bio: true,
@@ -19,6 +20,11 @@ export async function GET(
         background_type: true,
         background_value: true,
         custom_css: true,
+        layout: true,
+        font_family: true,
+        title_color: true,
+        button_style: true,
+        button_color: true,
       },
     })
 

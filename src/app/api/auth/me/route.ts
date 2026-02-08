@@ -36,6 +36,11 @@ export async function GET(req: NextRequest) {
         background_type: true,
         background_value: true,
         custom_css: true,
+        layout: true,
+        font_family: true,
+        title_color: true,
+        button_style: true,
+        button_color: true,
       },
     })
 
@@ -90,7 +95,13 @@ export async function PUT(req: NextRequest) {
       avatar_url,
       background_type,
       background_value,
-      custom_css 
+      custom_css,
+      // Design customization fields
+      layout,
+      font_family,
+      title_color,
+      button_style,
+      button_color,
     } = body
 
     const updateData: any = {}
@@ -102,6 +113,13 @@ export async function PUT(req: NextRequest) {
     if (background_type !== undefined) updateData.background_type = background_type
     if (background_value !== undefined) updateData.background_value = background_value
     if (custom_css !== undefined) updateData.custom_css = custom_css
+    
+    // Design customization
+    if (layout !== undefined) updateData.layout = layout
+    if (font_family !== undefined) updateData.font_family = font_family
+    if (title_color !== undefined) updateData.title_color = title_color
+    if (button_style !== undefined) updateData.button_style = button_style
+    if (button_color !== undefined) updateData.button_color = button_color
 
     const user = await prisma.user.update({
       where: { id: payload.userId },
@@ -118,6 +136,11 @@ export async function PUT(req: NextRequest) {
         background_type: true,
         background_value: true,
         custom_css: true,
+        layout: true,
+        font_family: true,
+        title_color: true,
+        button_style: true,
+        button_color: true,
       },
     })
 

@@ -7,16 +7,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import {
   FiPlus, FiLogOut, FiExternalLink, FiCopy, FiBarChart2, FiImage,
-  FiTrendingUp, FiUser, FiSparkles, FiLink, FiSettings, FiEye,
-  FiTrash2, FiEdit2, FiCheck, FiX, FiChevronUp, FiChevronDown, FiSmartphone, FiLayers
+  FiTrendingUp, FiUser, FiLink, FiSettings, FiEye,
+  FiTrash2, FiEdit2, FiCheck, FiX, FiChevronUp, FiChevronDown, FiSmartphone, FiLayers,
+  FiLayout, FiType
 } from 'react-icons/fi'
 import {
   FaGlobe, FaTwitter, FaInstagram, FaYoutube, FaTiktok, FaGithub,
   FaLinkedin, FaFacebook, FaTwitch, FaDiscord, FaSpotify, FaSnapchat,
   FaPinterest, FaReddit, FaTelegram, FaWhatsapp,
 } from 'react-icons/fa'
-import type { User, Link as LinkType } from '@/types'
+import type { User, Link as LinkType, DesignCustomization } from '@/types'
 import { themes } from '@/lib/utils'
+import DesignTab from '@/components/dashboard/DesignTab'
 
 const iconMap: Record<string, React.ComponentType> = {
   website: FaGlobe, twitter: FaTwitter, instagram: FaInstagram,
@@ -27,7 +29,7 @@ const iconMap: Record<string, React.ComponentType> = {
   whatsapp: FaWhatsapp,
 }
 
-type TabType = 'links' | 'appearance' | 'analytics'
+type TabType = 'links' | 'appearance' | 'analytics' | 'design'
 
 interface AnalyticsData {
   totalClicks: number
@@ -113,6 +115,11 @@ export default function DashboardPage() {
     } catch { toast.error('Failed to update theme') }
   }
 
+  const handleDesignUpdate = async (design: Partial<DesignCustomization>) => {
+    // Optimistically update the user state
+    setUser(prev => prev ? { ...prev, ...design } : null)
+  }
+
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
@@ -144,7 +151,7 @@ export default function DashboardPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-[280px_1fr_320px] gap-8">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-8">
           {/* Sidebar */}
           <aside>
             <div className="glass-card rounded-2xl p-6 sticky top-24">
@@ -160,6 +167,7 @@ export default function DashboardPage() {
                 {[
                   { id: 'links' as TabType, label: 'My Links', icon: FiLink },
                   { id: 'appearance' as TabType, label: 'Appearance', icon: FiImage },
+                  { id: 'design' as TabType, label: 'Design', icon: FiLayout },
                   { id: 'analytics' as TabType, label: 'Analytics', icon: FiBarChart2 },
                 ].map((item) => (
                   <button
@@ -278,6 +286,26 @@ export default function DashboardPage() {
                 </motion.div>
               )}
 
+              {/* Design Tab */}
+              {activeTab === 'design' && (
+                <motion.div key="design" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                  <DesignTab 
+                    user={{
+                      layout: user.layout,
+                      font_family: user.font_family,
+                      title_color: user.title_color,
+                      button_style: user.button_style,
+                      button_color: user.button_color,
+                      theme: user.theme,
+                      background_type: user.background_type,
+                      background_value: user.background_value,
+                    }}
+                    links={links}
+                    onDesignUpdate={handleDesignUpdate}
+                  />
+                </motion.div>
+              )}
+
               {/* Analytics Tab */}
               {activeTab === 'analytics' && (
                 <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
@@ -383,65 +411,6 @@ export default function DashboardPage() {
               )}
             </AnimatePresence>
           </main>
-
-          {/* Live Preview */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <div className="glass-card rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <FiSmartphone className="w-5 h-5 text-blue-400" />
-                  <span className="text-white font-medium">Live Preview</span>
-                </div>
-
-                {/* Phone Mockup */}
-                <div className="relative mx-auto w-[260px]">
-                  <div className="bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
-                    <div className={`relative overflow-hidden rounded-[2rem] ${themeObj.class}`} style={{ height: '520px' }}>
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 w-24 h-6 bg-black rounded-b-xl" />
-                      <div className="h-full overflow-y-auto pt-12 pb-6 px-4">
-                        <div className="text-center mb-6">
-                          <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-white">
-                            {user.name?.[0] || user.username[0].toUpperCase()}
-                          </div>
-                          <h1 className="text-lg font-bold text-white mb-1">{user.name || user.username}</h1>
-                          <p className="text-white/70 text-sm mb-2">@{user.username}</p>
-                          {user.bio && <p className="text-white/80 text-xs max-w-[200px] mx-auto">{user.bio}</p>}
-                        </div>
-
-                        <div className="space-y-2.5">
-                          {links.filter(l => l.active).length === 0 ? (
-                            <div className="text-center py-8 text-white/50 text-sm">No active links</div>
-                          ) : (
-                            links.filter(l => l.active).map((link, i) => {
-                              const Icon = link.icon ? iconMap[link.icon] : FaGlobe
-                              return (
-                                <motion.div
-                                  key={link.id}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: i * 0.05 }}
-                                  className="w-full bg-white/10 backdrop-blur-md rounded-xl p-3 flex items-center gap-3"
-                                >
-                                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                                    {Icon && <Icon className="w-5 h-5 text-white" />}
-                                  </div>
-                                  <span className="flex-1 text-sm font-medium text-white truncate">{link.title}</span>
-                                </motion.div>
-                              )
-                            })
-                          )}
-                        </div>
-
-                        <div className="mt-8 text-center">
-                          <span className="text-white/50 text-[10px]">Powered by GitoLink</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </div>

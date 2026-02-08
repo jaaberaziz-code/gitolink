@@ -5,6 +5,7 @@ export { default as ProfileSettings } from './ProfileSettings'
 export { default as ThemePreview } from './ThemePreview'
 export { default as LinkEditor } from './LinkEditor'
 export { default as MobileMockup } from './MobileMockup'
+export { default as DesignTab } from './DesignTab'
 
 // New profile customization exports
 export { ProfileImageUpload } from './ProfileImageUpload'

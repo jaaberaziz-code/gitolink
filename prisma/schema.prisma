@@ -26,6 +26,13 @@ model User {
   // Custom CSS for advanced users
   custom_css      String?  @db.Text
   
+  // Design customization
+  layout           String   @default("classic") // 'classic', 'hero', 'minimal'
+  font_family      String   @default("Inter") // Google Font name
+  title_color      String   @default("#ffffff") // Hex color for title text
+  button_style     String   @default("rounded") // 'rounded', 'pill', 'square', 'glass'
+  button_color     String   @default("#3b82f6") // Hex color for buttons
+  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

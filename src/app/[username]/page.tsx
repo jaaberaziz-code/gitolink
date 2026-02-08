@@ -59,6 +59,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     fetchProfile()
   }, [params.username])
 
+  // Load Google Font
+  useEffect(() => {
+    if (profile?.user.font_family && profile.user.font_family !== 'Inter') {
+      const link = document.createElement('link')
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(profile.user.font_family)}:wght@400;500;600;700&display=swap`
+      link.rel = 'stylesheet'
+      document.head.appendChild(link)
+      return () => {
+        document.head.removeChild(link)
+      }
+    }
+  }, [profile?.user.font_family])
+
   const fetchProfile = async () => {
     try {
       const res = await fetch(`/api/profile/${params.username}`)
@@ -151,10 +164,59 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
   const themeId = user.theme || 'cyberpunk'
   const isLight = themeId === 'minimal'
-  const textColor = isLight ? 'text-gray-900' : 'text-white'
-  const subTextColor = isLight ? 'text-gray-600' : 'text-white/80'
+  const defaultTextColor = isLight ? '#111827' : '#ffffff'
+  const defaultSubTextColor = isLight ? '#4b5563' : 'rgba(255,255,255,0.8)'
   const bgType = user.background_type || 'gradient'
   const showCustomCSS = user.custom_css && user.custom_css.trim().length > 0
+
+  // Design customization values
+  const layout = user.layout || 'classic'
+  const fontFamily = user.font_family || 'Inter'
+  const titleColor = user.title_color || defaultTextColor
+  const buttonStyle = user.button_style || 'rounded'
+  const buttonColor = user.button_color || '#3b82f6'
+
+  // Get button classes based on style
+  const getButtonClass = () => {
+    const baseClass = 'w-full flex items-center gap-4 group transition-all hover:scale-[1.02]'
+    
+    if (buttonStyle === 'glass') {
+      return `${baseClass} rounded-xl p-4 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30`
+    }
+    
+    const bgClass = buttonStyle === 'pill' || buttonStyle === 'rounded'
+      ? '' // Color handled by style
+      : isLight ? 'bg-white/90 hover:bg-white shadow-md' : 'glass hover:bg-white/20'
+    
+    switch (buttonStyle) {
+      case 'pill':
+        return `${baseClass} ${bgClass} rounded-full px-6 py-4`
+      case 'square':
+        return `${baseClass} ${bgClass} rounded-none p-4`
+      case 'rounded':
+      default:
+        return `${baseClass} ${bgClass} rounded-xl p-4`
+    }
+  }
+
+  const getButtonStyle = () => {
+    if (buttonStyle === 'glass') return {}
+    return { backgroundColor: buttonColor }
+  }
+
+  const getTextColor = () => {
+    // For custom colored buttons, determine if we need white or dark text
+    if (buttonStyle !== 'glass') {
+      // Simple luminance check for button text color
+      const hex = buttonColor.replace('#', '')
+      const r = parseInt(hex.substr(0, 2), 16)
+      const g = parseInt(hex.substr(2, 2), 16)
+      const b = parseInt(hex.substr(4, 2), 16)
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+      return luminance > 0.5 ? '#111827' : '#ffffff'
+    }
+    return defaultTextColor
+  }
 
   return (
     <>
@@ -165,78 +227,141 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
       <div 
         className={`min-h-screen ${getThemeClass()}`}
-        style={getBackgroundStyle()}
+        style={{
+          ...getBackgroundStyle(),
+          fontFamily,
+        }}
       >
         <div className="max-w-2xl mx-auto px-4 py-12">
-          {/* Profile Header */}
-          <div className="text-center mb-8">
-            <div className={`
-              w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold
-              overflow-hidden
-              ${isLight ? 'bg-white shadow-lg' : 'bg-white/20 backdrop-blur-sm border-2 border-white/30'}
-            `}>
-              {user.avatar_url || user.avatar ? (
-                <Image
-                  src={user.avatar_url || user.avatar || ''}
-                  alt={user.name || user.username}
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className={textColor}>
-                  {(user.name?.[0] || user.username[0])?.toUpperCase()}
-                </span>
+          {/* Classic Layout */}
+          {layout === 'classic' && (
+            <div className="text-center mb-8">
+              <div className={`
+                w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold
+                overflow-hidden
+                ${isLight ? 'bg-white shadow-lg' : 'bg-white/20 backdrop-blur-sm border-2 border-white/30'}
+              `}>
+                {user.avatar_url || user.avatar ? (
+                  <Image
+                    src={user.avatar_url || user.avatar || ''}
+                    alt={user.name || user.username}
+                    width={96}
+                    height={96}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span style={{ color: titleColor }}>
+                    {(user.name?.[0] || user.username[0])?.toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              <h1 
+                className="text-2xl font-bold mb-2 drop-shadow-lg"
+                style={{ color: titleColor }}
+              >
+                {user.name || user.username}
+              </h1>
+
+              <p className="mb-4" style={{ color: defaultSubTextColor }}>@{user.username}</p>
+
+              {user.bio && (
+                <p className="max-w-md mx-auto drop-shadow" style={{ color: defaultSubTextColor }}>{user.bio}</p>
               )}
             </div>
+          )}
 
-            <h1 className={`text-2xl font-bold ${textColor} mb-2 drop-shadow-lg`}>
-              {user.name || user.username}
-            </h1>
+          {/* Hero Layout */}
+          {layout === 'hero' && (
+            <div className="text-center mb-12 py-8">
+              <h1 
+                className="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg"
+                style={{ color: titleColor }}
+              >
+                {user.name || user.username}
+              </h1>
 
-            <p className={`${subTextColor} mb-4`}>@{user.username}</p>
+              <p className="mb-6 text-lg" style={{ color: defaultSubTextColor }}>@{user.username}</p>
 
-            {user.bio && (
-              <p className={`${subTextColor} max-w-md mx-auto drop-shadow`}>{user.bio}</p>
-            )}
-          </div>
+              <div className={`
+                w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold
+                overflow-hidden
+                ${isLight ? 'bg-white shadow-lg' : 'bg-white/20 backdrop-blur-sm border-2 border-white/30'}
+              `}>
+                {user.avatar_url || user.avatar ? (
+                  <Image
+                    src={user.avatar_url || user.avatar || ''}
+                    alt={user.name || user.username}
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span style={{ color: titleColor }}>
+                    {(user.name?.[0] || user.username[0])?.toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              {user.bio && (
+                <p className="max-w-md mx-auto drop-shadow" style={{ color: defaultSubTextColor }}>{user.bio}</p>
+              )}
+            </div>
+          )}
+
+          {/* Minimal Layout */}
+          {layout === 'minimal' && (
+            <div className="text-center mb-8">
+              <h1 
+                className="text-3xl font-bold mb-1"
+                style={{ color: titleColor }}
+              >
+                {user.name || user.username}
+              </h1>
+
+              <p className="mb-6 text-sm" style={{ color: defaultSubTextColor }}>@{user.username}</p>
+
+              {user.bio && (
+                <p className="max-w-md mx-auto mb-6 text-sm" style={{ color: defaultSubTextColor }}>{user.bio}</p>
+              )}
+            </div>
+          )}
 
           {/* Links */}
           <div className="space-y-4">
             {links.map((link) => {
               const Icon = link.icon ? iconMap[link.icon] : FaGlobe
+              const buttonTextColor = getTextColor()
 
               return (
                 <button
                   key={link.id}
                   onClick={() => handleLinkClick(link.id, link.url)}
-                  className={`
-                    w-full rounded-xl p-4 flex items-center gap-4 group transition-all hover:scale-[1.02]
-                    ${isLight 
-                      ? 'bg-white/90 hover:bg-white shadow-md' 
-                      : 'glass hover:bg-white/20'
-                    }
-                    link-button
-                  `}
+                  className={getButtonClass()}
+                  style={getButtonStyle()}
                 >
                   <div className={`
-                    w-12 h-12 rounded-full flex items-center justify-center
-                    ${isLight ? 'bg-gray-100' : 'bg-white/20'}
+                    w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
+                    ${buttonStyle === 'glass' ? 'bg-white/20' : 'bg-white/20'}
                   `}>
-                    {Icon && <Icon className={`w-6 h-6 ${textColor}`} />}
+                    {Icon && <Icon className="w-6 h-6" style={{ color: buttonTextColor }} />}
                   </div>
 
-                  <span className={`flex-1 text-lg font-medium text-left drop-shadow ${textColor}`}>
+                  <span 
+                    className="flex-1 text-lg font-medium text-left drop-shadow"
+                    style={{ color: buttonTextColor }}
+                  >
                     {link.title}
                   </span>
 
                   <div className={`
                     w-8 h-8 rounded-full flex items-center justify-center
                     opacity-0 group-hover:opacity-100 transition-opacity
-                    ${isLight ? 'bg-gray-100' : 'bg-white/20'}
+                    ${buttonStyle === 'glass' ? 'bg-white/20' : 'bg-white/20'}
                   `}>
                     <svg
-                      className={`w-4 h-4 ${textColor}`}
+                      className="w-4 h-4"
+                      style={{ color: buttonTextColor }}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -255,10 +380,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           </div>
 
           {/* Footer */}
-          <div className="mt-12 text-center gitolink-footer">
+          <div className="mt-12 text-center">
             <a
               href="/"
-              className={`${subTextColor} hover:text-white transition-colors text-sm`}
+              className="hover:text-white transition-colors text-sm"
+              style={{ color: defaultSubTextColor }}
             >
               Powered by GitoLink
             </a>
