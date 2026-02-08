@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
+import { DashboardSkeleton, AnalyticsSkeleton, LinkItemSkeleton, SidebarSkeleton, CardSkeleton, Skeleton } from '@/components/ui/Skeleton'
 import {
   FiPlus, FiLogOut, FiExternalLink, FiCopy, FiBarChart2, FiImage,
   FiTrendingUp, FiUser, FiLink, FiSettings, FiEye,
@@ -136,11 +137,7 @@ export default function DashboardPage() {
   }
 
   if (loading || !user) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   const themeObj = themes.find(t => t.id === displayTheme) || themes[0]
@@ -330,9 +327,7 @@ export default function DashboardPage() {
                   </div>
 
                   {analyticsLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-                    </div>
+                    <AnalyticsSkeleton />
                   ) : analytics ? (
                     <>
                       {/* Stats Cards */}

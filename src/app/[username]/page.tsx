@@ -24,6 +24,7 @@ import { FiMail, FiPhone } from 'react-icons/fi'
 import type { ProfileData } from '@/types'
 import { themes } from '@/lib/utils'
 import Image from 'next/image'
+import { ProfilePageSkeleton } from '@/components/ui/Skeleton'
 
 const iconMap: Record<string, React.ComponentType> = {
   website: FaGlobe,
@@ -105,11 +106,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-      </div>
-    )
+    return <ProfilePageSkeleton />
   }
 
   if (error || !profile) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -10,6 +10,7 @@ import { PlatformSelector } from './PlatformSelector'
 import { ThemeSelector } from './ThemeSelector'
 import { ProfileSetup } from './ProfileSetup'
 import { Celebration } from './Celebration'
+import { OnboardingThemeSkeleton, OnboardingPlatformSkeleton, OnboardingProfileSkeleton } from '@/components/ui/Skeleton'
 
 export type OnboardingGoal = 'creator' | 'business' | 'personal'
 
@@ -240,10 +241,12 @@ export function OnboardingWizard() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <PlatformSelector
-                  selected={data.platforms}
-                  onChange={(platforms) => updateData({ platforms })}
-                />
+                <Suspense fallback={<OnboardingPlatformSkeleton />}>
+                  <PlatformSelector
+                    selected={data.platforms}
+                    onChange={(platforms) => updateData({ platforms })}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
@@ -255,10 +258,12 @@ export function OnboardingWizard() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <ThemeSelector
-                  selected={data.theme}
-                  onSelect={(theme) => updateData({ theme })}
-                />
+                <Suspense fallback={<OnboardingThemeSkeleton />}>
+                  <ThemeSelector
+                    selected={data.theme}
+                    onSelect={(theme) => updateData({ theme })}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
@@ -270,10 +275,12 @@ export function OnboardingWizard() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <ProfileSetup
-                  data={data.profile}
-                  onChange={(profile) => updateData({ profile })}
-                />
+                <Suspense fallback={<OnboardingProfileSkeleton />}>
+                  <ProfileSetup
+                    data={data.profile}
+                    onChange={(profile) => updateData({ profile })}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
