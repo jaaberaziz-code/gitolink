@@ -8,11 +8,13 @@ import toast from 'react-hot-toast'
 import { DashboardSkeleton, AnalyticsSkeleton } from '@/components/ui/Skeleton'
 import LinkList from '@/components/dashboard/LinkList'
 import AddLinkModal from '@/components/dashboard/AddLinkModal'
+import QRCodeGenerator from '@/components/qr/QRCodeGenerator'
+import LinkAnalytics from '@/components/dashboard/LinkAnalytics'
 import {
   FiPlus, FiLogOut, FiExternalLink, FiCopy, FiBarChart2, FiImage,
   FiTrendingUp, FiUser, FiLink, FiSettings, FiEye,
   FiTrash2, FiEdit2, FiCheck, FiX, FiChevronUp, FiChevronDown, FiSmartphone, FiLayers,
-  FiLayout, FiType
+  FiLayout, FiType, FiDownload, FiCalendar, FiArrowUp, FiArrowDown
 } from 'react-icons/fi'
 import type { User, Link as LinkType, DesignCustomization } from '@/types'
 import { themes } from '@/lib/utils'
@@ -49,6 +51,9 @@ export default function DashboardPage() {
   const [previewTheme, setPreviewTheme] = useState<string | null>(null)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsDays, setAnalyticsDays] = useState(30)
+  const [analyticsSortBy, setAnalyticsSortBy] = useState<'clicks' | 'name'>('clicks')
+  const [analyticsSortOrder, setAnalyticsSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showAddModal, setShowAddModal] = useState(false)
 
   const displayTheme = previewTheme || user?.theme || 'cyberpunk'
@@ -62,7 +67,7 @@ export default function DashboardPage() {
     if (activeTab === 'analytics') {
       fetchAnalytics()
     }
-  }, [activeTab])
+  }, [activeTab, analyticsDays])
 
   const fetchUser = async () => {
     try {
@@ -88,7 +93,7 @@ export default function DashboardPage() {
   const fetchAnalytics = async () => {
     setAnalyticsLoading(true)
     try {
-      const res = await fetch('/api/analytics?days=30')
+      const res = await fetch(`/api/analytics?days=${analyticsDays}`)
       if (res.ok) {
         const data = await res.json()
         setAnalytics(data)
@@ -336,6 +341,34 @@ export default function DashboardPage() {
     }
   }
 
+  // Export analytics data as CSV
+  const exportAnalytics = () => {
+    if (!analytics) return
+
+    const csvRows = [
+      ['Link Title', 'Clicks', 'Share %', 'Link URL'],
+      ...analytics.clicksPerLink.map(link => {
+        const share = analytics.totalClicks > 0 
+          ? ((link.count / analytics.totalClicks) * 100).toFixed(1)
+          : '0'
+        const linkData = links.find(l => l.id === link.linkId)
+        return [link.title, link.count.toString(), `${share}%`, linkData?.url || '']
+      })
+    ]
+
+    const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `analytics-${analyticsDays}d-${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+    toast.success('Analytics exported!')
+  }
+
   if (loading || !user) {
     return <DashboardSkeleton />
   }
@@ -508,9 +541,38 @@ export default function DashboardPage() {
               {/* Analytics Tab */}
               {activeTab === 'analytics' && (
                 <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                  <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-white">Analytics</h1>
-                    <p className="text-gray-400 text-sm">Track your link performance (Last 30 days)</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div>
+                      <h1 className="text-2xl font-bold text-white">Analytics</h1>
+                      <p className="text-gray-400 text-sm">Track your link performance</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* Time Range Filter */}
+                      <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
+                        {[7, 30, 90].map((days) => (
+                          <button
+                            key={days}
+                            onClick={() => setAnalyticsDays(days)}
+                            className={`px-3 py-1.5 rounded-md text-sm transition-all ${
+                              analyticsDays === days
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            {days}d
+                          </button>
+                        ))}
+                      </div>
+                      {/* Export Button */}
+                      <button
+                        onClick={exportAnalytics}
+                        disabled={!analytics || analyticsLoading}
+                        className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <FiDownload className="w-4 h-4" />
+                        <span className="hidden sm:inline text-sm">Export</span>
+                      </button>
+                    </div>
                   </div>
 
                   {analyticsLoading ? (
@@ -518,82 +580,176 @@ export default function DashboardPage() {
                   ) : analytics ? (
                     <>
                       {/* Stats Cards */}
-                      <div className="grid sm:grid-cols-3 gap-4 mb-6">
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         {[
                           { label: 'Total Clicks', value: analytics.totalClicks, icon: FiTrendingUp, color: 'from-blue-500 to-cyan-500' },
                           { label: 'Active Links', value: links.filter(l => l.active).length, icon: FiLink, color: 'from-purple-500 to-pink-500' },
                           { label: 'Total Links', value: links.length, icon: FiLayers, color: 'from-orange-500 to-red-500' },
+                          { label: 'Avg Per Day', value: Math.round(analytics.totalClicks / analyticsDays), icon: FiCalendar, color: 'from-green-500 to-emerald-500' },
                         ].map((stat, i) => (
                           <motion.div
                             key={stat.label}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.1 }}
-                            className="glass-card rounded-2xl p-6"
+                            className="glass-card rounded-2xl p-5"
                           >
-                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-4`}>
-                              <stat.icon className="w-6 h-6 text-white" />
+                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
+                              <stat.icon className="w-5 h-5 text-white" />
                             </div>
-                            <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
+                            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
                             <p className="text-gray-400 text-sm">{stat.label}</p>
                           </motion.div>
                         ))}
                       </div>
 
-                      {/* Clicks Per Link */}
-                      {analytics.clicksPerLink.length > 0 && (
-                        <div className="glass-card rounded-2xl p-6 mb-6">
-                          <h3 className="text-lg font-semibold text-white mb-4">Clicks Per Link</h3>
-                          <div className="space-y-3">
-                            {analytics.clicksPerLink
-                              .sort((a, b) => b.count - a.count)
-                              .map((link, i) => (
-                                <div key={link.linkId} className="flex items-center gap-4">
-                                  <span className="text-gray-500 w-6">#{i + 1}</span>
-                                  <div className="flex-1">
-                                    <p className="text-white font-medium">{link.title}</p>
-                                    <div className="h-2 bg-white/10 rounded-full mt-1">
-                                      <div 
-                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
-                                        style={{ width: `${Math.max((link.count / Math.max(...analytics.clicksPerLink.map(l => l.count))) * 100, 5)}%` }}
-                                      />
-                                    </div>
-                                  </div>
-                                  <span className="text-white font-bold">{link.count}</span>
-                                </div>
-                              ))}
+                      {/* Links Performance Section */}
+                      <div className="glass-card rounded-2xl p-6 mb-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">Links Performance</h3>
+                            <p className="text-gray-400 text-sm">Click statistics for each link</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400 text-sm">Sort by:</span>
+                            <select
+                              value={analyticsSortBy}
+                              onChange={(e) => setAnalyticsSortBy(e.target.value as 'clicks' | 'name')}
+                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                            >
+                              <option value="clicks" className="bg-gray-900">Clicks</option>
+                              <option value="name" className="bg-gray-900">Name</option>
+                            </select>
+                            <button
+                              onClick={() => setAnalyticsSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                              className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                            >
+                              {analyticsSortOrder === 'desc' ? <FiArrowDown className="w-4 h-4" /> : <FiArrowUp className="w-4 h-4" />}
+                            </button>
                           </div>
                         </div>
-                      )}
 
-                      {/* Device & Browser Stats */}
-                      <div className="grid sm:grid-cols-2 gap-6">
-                        {analytics.deviceStats.length > 0 && (
-                          <div className="glass-card rounded-2xl p-6">
-                            <h3 className="text-lg font-semibold text-white mb-4">Devices</h3>
+                        {/* Bar Chart for Clicks Per Link */}
+                        {analytics.clicksPerLink.length > 0 && (
+                          <div className="mb-8">
                             <div className="space-y-3">
-                              {analytics.deviceStats.sort((a, b) => b.count - a.count).map((stat) => (
-                                <div key={stat.device} className="flex items-center justify-between">
-                                  <span className="text-gray-300">{stat.device}</span>
-                                  <span className="text-white font-medium">{stat.count}</span>
-                                </div>
-                              ))}
+                              {analytics.clicksPerLink
+                                .sort((a, b) => b.count - a.count)
+                                .slice(0, 10)
+                                .map((link, i) => {
+                                  const maxClicks = Math.max(...analytics.clicksPerLink.map(l => l.count))
+                                  const percentage = maxClicks > 0 ? (link.count / maxClicks) * 100 : 0
+                                  const sharePercentage = analytics.totalClicks > 0 
+                                    ? Math.round((link.count / analytics.totalClicks) * 100) 
+                                    : 0
+                                  
+                                  return (
+                                    <div key={link.linkId} className="flex items-center gap-4">
+                                      <span className="text-gray-500 w-6 text-sm">#{i + 1}</span>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <p className="text-white font-medium truncate text-sm">{link.title}</p>
+                                          <div className="flex items-center gap-3">
+                                            <span className="text-gray-400 text-xs">{sharePercentage}%</span>
+                                            <span className="text-white font-bold text-sm w-12 text-right">{link.count}</span>
+                                          </div>
+                                        </div>
+                                        <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                                          <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${Math.max(percentage, 5)}%` }}
+                                            transition={{ duration: 0.5, delay: i * 0.05 }}
+                                            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                             </div>
                           </div>
                         )}
 
+                        {/* Detailed Link Cards */}
+                        <LinkAnalytics 
+                          links={analytics.clicksPerLink.map(link => ({
+                            ...link,
+                            url: links.find(l => l.id === link.linkId)?.url
+                          }))}
+                          totalClicks={analytics.totalClicks}
+                          sortBy={analyticsSortBy}
+                          sortOrder={analyticsSortOrder}
+                        />
+                      </div>
+
+                      {/* Device & Browser Stats */}
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        {analytics.deviceStats.length > 0 && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="glass-card rounded-2xl p-6"
+                          >
+                            <h3 className="text-lg font-semibold text-white mb-4">Devices</h3>
+                            <div className="space-y-3">
+                              {analytics.deviceStats
+                                .sort((a, b) => b.count - a.count)
+                                .map((stat) => {
+                                  const percentage = analytics.totalClicks > 0 
+                                    ? Math.round((stat.count / analytics.totalClicks) * 100) 
+                                    : 0
+                                  return (
+                                    <div key={stat.device} className="flex items-center gap-3">
+                                      <span className="text-gray-300 text-sm flex-1">{stat.device}</span>
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                          <div 
+                                            className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                                            style={{ width: `${percentage}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-white font-medium text-sm w-10 text-right">{stat.count}</span>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                            </div>
+                          </motion.div>
+                        )}
+
                         {analytics.browserStats.length > 0 && (
-                          <div className="glass-card rounded-2xl p-6">
+                          <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="glass-card rounded-2xl p-6"
+                          >
                             <h3 className="text-lg font-semibold text-white mb-4">Browsers</h3>
                             <div className="space-y-3">
-                              {analytics.browserStats.sort((a, b) => b.count - a.count).map((stat) => (
-                                <div key={stat.browser} className="flex items-center justify-between">
-                                  <span className="text-gray-300">{stat.browser}</span>
-                                  <span className="text-white font-medium">{stat.count}</span>
-                                </div>
-                              ))}
+                              {analytics.browserStats
+                                .sort((a, b) => b.count - a.count)
+                                .map((stat) => {
+                                  const percentage = analytics.totalClicks > 0 
+                                    ? Math.round((stat.count / analytics.totalClicks) * 100) 
+                                    : 0
+                                  return (
+                                    <div key={stat.browser} className="flex items-center gap-3">
+                                      <span className="text-gray-300 text-sm flex-1">{stat.browser}</span>
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                          <div 
+                                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+                                            style={{ width: `${percentage}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-white font-medium text-sm w-10 text-right">{stat.count}</span>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                             </div>
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     </>
