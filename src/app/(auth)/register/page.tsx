@@ -34,7 +34,7 @@ export default function RegisterPage() {
       }
 
       toast.success('Account created successfully!')
-      router.push('/dashboard')
+      router.push('/onboarding')
       router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create account')

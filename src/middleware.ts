@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyJWT } from './lib/jwt'
 
-const protectedRoutes = ['/dashboard']
+const protectedRoutes = ['/dashboard', '/onboarding']
 const authRoutes = ['/login', '/register']
 
 export async function middleware(request: NextRequest) {

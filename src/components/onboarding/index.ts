@@ -1,0 +1,6 @@
+export { OnboardingWizard } from './OnboardingWizard'
+export { GoalSelector } from './GoalSelector'
+export { PlatformSelector } from './PlatformSelector'
+export { ThemeSelector } from './ThemeSelector'
+export { ProfileSetup } from './ProfileSetup'
+export { Celebration } from './Celebration'
