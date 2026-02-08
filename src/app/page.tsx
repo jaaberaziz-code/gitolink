@@ -18,6 +18,7 @@ import {
   FiTrendingUp
 } from 'react-icons/fi'
 import { FaTwitter, FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa'
+import ThemeShowcase from '@/components/ThemeShowcase'
 
 // Animation variants
 const fadeInUp = {
@@ -419,66 +420,7 @@ export default function Home() {
       </section>
 
       {/* Theme Showcase Section */}
-      <section className="py-32 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-purple-500/5" />
-        <div className="max-w-7xl mx-auto relative">
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium mb-4">
-              Themes
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              20+ Stunning Themes
-            </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              From cyberpunk neon to corporate elegance, find the perfect look for your brand.
-            </p>
-          </motion.div>
-
-          {/* Theme Previews */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {[
-              { name: 'Cyberpunk', gradient: 'from-pink-500 via-purple-500 to-cyan-400' },
-              { name: 'Sunset', gradient: 'from-orange-400 via-pink-500 to-purple-600' },
-              { name: 'Ocean', gradient: 'from-cyan-600 via-blue-700 to-indigo-800' },
-              { name: 'Forest', gradient: 'from-emerald-500 via-teal-600 to-green-700' },
-              { name: 'Gold', gradient: 'from-yellow-400 via-yellow-500 to-amber-600' },
-              { name: 'Aurora', gradient: 'from-green-300 via-blue-500 to-purple-600' },
-              { name: 'Retro', gradient: 'from-purple-600 via-pink-500 to-orange-400' },
-              { name: 'Cotton Candy', gradient: 'from-pink-300 via-purple-300 to-indigo-400' },
-              { name: 'Midnight', gradient: 'from-indigo-900 via-purple-900 to-slate-900' },
-              { name: 'Rose Gold', gradient: 'from-rose-300 via-pink-400 to-purple-400' },
-            ].map((theme, index) => (
-              <motion.div
-                key={theme.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="group cursor-pointer"
-              >
-                <div className={`h-24 rounded-xl bg-gradient-to-br ${theme.gradient} mb-2 shadow-lg group-hover:shadow-xl transition-shadow`} />
-                <p className="text-center text-sm text-gray-400 group-hover:text-white transition-colors">{theme.name}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link 
-              href="/demo" 
-              className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              See all themes in action
-              <FiArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      <ThemeShowcase />
 
       {/* Comparison Section */}
       <section className="py-32 px-4">

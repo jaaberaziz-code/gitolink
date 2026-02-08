@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { FiLayout, FiType, FiImage, FiGrid, FiCheck } from 'react-icons/fi'
+import { FiLayout, FiType, FiImage, FiGrid, FiCheck, FiRotateCcw, FiSave, FiAlertCircle } from 'react-icons/fi'
 import { BsPalette } from 'react-icons/bs'
 import { ImageUpload } from '@/components/upload/ImageUpload'
 import { ImageCrop } from '@/components/upload/ImageCrop'
@@ -40,6 +40,18 @@ const presetColors = [
   '#a855f7', '#d946ef', '#ec4899', '#f43f5e',
 ]
 
+// Default design values
+const defaultDesign: DesignUser = {
+  layout: 'classic',
+  font_family: 'Inter',
+  title_color: '#ffffff',
+  button_style: 'rounded',
+  button_color: '#3b82f6',
+  theme: 'cyberpunk',
+  background_type: 'gradient',
+  background_value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+}
+
 export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
   const [activeSection, setActiveSection] = useState<SectionType>('layout')
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
@@ -47,6 +59,107 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
   const [cropType, setCropType] = useState<ImageType>('avatar')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  
+  // State management for pending changes
+  const [pendingChanges, setPendingChanges] = useState<Partial<DesignUser>>({})
+  const [savedState, setSavedState] = useState<DesignUser>(user)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
+  
+  // Ref to track if component is mounted
+  const isMounted = useRef(true)
+
+  // Calculate effective design (saved + pending changes)
+  const effectiveDesign: DesignUser = { ...savedState, ...pendingChanges }
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = Object.keys(pendingChanges).length > 0
+
+  // Update saved state when user prop changes (initial load)
+  useEffect(() => {
+    if (isMounted.current) {
+      setSavedState(user)
+    }
+  }, [user])
+
+  // Handle beforeunload event for unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+        return e.returnValue
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [hasUnsavedChanges])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  // Handle pending design changes (draft mode)
+  const handleDesignChange = useCallback((changes: Partial<DesignUser>) => {
+    setPendingChanges(prev => ({ ...prev, ...changes }))
+  }, [])
+
+  // Apply changes to the database
+  const handleApplyChanges = async () => {
+    if (!hasUnsavedChanges) return
+
+    setIsSaving(true)
+    try {
+      // Call the parent's onDesignUpdate with all pending changes
+      await onDesignUpdate(pendingChanges)
+      
+      // Update saved state with pending changes
+      setSavedState(prev => ({ ...prev, ...pendingChanges }))
+      
+      // Clear pending changes
+      setPendingChanges({})
+      
+      toast.success('Design changes saved successfully!')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save changes')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Reset to saved state
+  const handleReset = () => {
+    if (!hasUnsavedChanges) return
+    
+    setPendingChanges({})
+    toast('Changes discarded', { icon: '↩️' })
+  }
+
+  // Reset to default values
+  const handleResetToDefault = () => {
+    const confirmReset = window.confirm(
+      'This will reset all design settings to default values. Any unsaved changes will be lost. Continue?'
+    )
+    
+    if (confirmReset) {
+      setPendingChanges({
+        layout: defaultDesign.layout,
+        font_family: defaultDesign.font_family,
+        title_color: defaultDesign.title_color,
+        button_style: defaultDesign.button_style,
+        button_color: defaultDesign.button_color,
+        background_type: defaultDesign.background_type,
+        background_value: defaultDesign.background_value,
+      })
+      toast('Default values loaded. Click Apply to save.', { icon: 'ℹ️' })
+    }
+  }
 
   const handleImageSelect = useCallback((file: File, previewUrl: string, type: ImageType) => {
     setSelectedFile(file)
@@ -90,8 +203,8 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
           toast.success('Profile image updated!')
         }
       } else {
-        onDesignUpdate({ background_type: 'image', background_value: data.url })
-        toast.success('Background image updated!')
+        handleDesignChange({ background_type: 'image', background_value: data.url })
+        toast.success('Background image added to draft!')
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to upload image')
@@ -103,7 +216,7 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
   }
 
   const handleBackgroundChange = (type: 'gradient' | 'solid' | 'image', value: string) => {
-    onDesignUpdate({ background_type: type, background_value: value })
+    handleDesignChange({ background_type: type, background_value: value })
   }
 
   const sections = [
@@ -116,10 +229,76 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Design</h1>
-        <p className="text-gray-400 text-sm">Customize your profile design</p>
+      {/* Header with unsaved changes indicator */}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-white">Design</h1>
+            {hasUnsavedChanges && (
+              <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full flex items-center gap-1">
+                <FiAlertCircle className="w-3 h-3" />
+                Unsaved changes
+              </span>
+            )}
+          </div>
+          <p className="text-gray-400 text-sm">Customize your profile design</p>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleResetToDefault}
+            disabled={isSaving}
+            className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+            title="Reset to default values"
+          >
+            Default
+          </button>
+          <button
+            onClick={handleReset}
+            disabled={!hasUnsavedChanges || isSaving}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed
+              bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <FiRotateCcw className="w-4 h-4" />
+            Reset
+          </button>
+          <button
+            onClick={handleApplyChanges}
+            disabled={!hasUnsavedChanges || isSaving}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed
+              bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <FiSave className="w-4 h-4" />
+                Apply Changes
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Unsaved Changes Warning Banner */}
+      {hasUnsavedChanges && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3"
+        >
+          <FiAlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-amber-200 text-sm font-medium">You have unsaved changes</p>
+            <p className="text-amber-200/70 text-xs">Click "Apply Changes" to save your modifications, or "Reset" to discard them.</p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Section Tabs */}
       <div className="flex flex-wrap gap-2 p-1 bg-gray-800/50 rounded-xl">
@@ -156,10 +335,10 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
             {layouts.map((layout) => (
               <button
                 key={layout.id}
-                onClick={() => onDesignUpdate({ layout: layout.id as typeof user.layout })}
+                onClick={() => handleDesignChange({ layout: layout.id as typeof user.layout })}
                 className={`
                   p-4 rounded-xl border-2 transition-all text-left
-                  ${user.layout === layout.id
+                  ${effectiveDesign.layout === layout.id
                     ? 'border-blue-500 bg-blue-500/10'
                     : 'border-gray-700 hover:border-gray-600 bg-gray-800/30'
                   }
@@ -171,7 +350,7 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
                 </div>
                 <p className="font-medium text-white">{layout.name}</p>
                 <p className="text-sm text-gray-400">{layout.description}</p>
-                {user.layout === layout.id && (
+                {effectiveDesign.layout === layout.id && (
                   <div className="mt-2 flex items-center gap-1 text-blue-400 text-sm"
                   >
                     <FiCheck className="w-4 h-4" /> Selected
@@ -195,10 +374,10 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
             {googleFonts.map((font) => (
               <button
                 key={font.id}
-                onClick={() => onDesignUpdate({ font_family: font.id })}
+                onClick={() => handleDesignChange({ font_family: font.id })}
                 className={`
                   p-3 rounded-xl border-2 transition-all
-                  ${user.font_family === font.id
+                  ${effectiveDesign.font_family === font.id
                     ? 'border-blue-500 bg-blue-500/10'
                     : 'border-gray-700 hover:border-gray-600 bg-gray-800/30'
                   }
@@ -225,14 +404,14 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
             {presetColors.map((color) => (
               <button
                 key={color}
-                onClick={() => onDesignUpdate({ title_color: color })}
+                onClick={() => handleDesignChange({ title_color: color })}
                 className={`
                   aspect-square rounded-xl transition-all
-                  ${user.title_color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}
+                  ${effectiveDesign.title_color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}
                 `}
                 style={{ backgroundColor: color }}
               >
-                {user.title_color === color && (
+                {effectiveDesign.title_color === color && (
                   <FiCheck className={`w-5 h-5 mx-auto ${color === '#ffffff' ? 'text-black' : 'text-white'}`} />
                 )}
               </button>
@@ -244,14 +423,14 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
             <div className="flex items-center gap-3">
               <input
                 type="color"
-                value={user.title_color}
-                onChange={(e) => onDesignUpdate({ title_color: e.target.value })}
+                value={effectiveDesign.title_color}
+                onChange={(e) => handleDesignChange({ title_color: e.target.value })}
                 className="w-12 h-12 rounded-lg cursor-pointer border-0 p-0"
               />
               <input
                 type="text"
-                value={user.title_color}
-                onChange={(e) => onDesignUpdate({ title_color: e.target.value })}
+                value={effectiveDesign.title_color}
+                onChange={(e) => handleDesignChange({ title_color: e.target.value })}
                 className="flex-1 px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white text-sm uppercase"
                 placeholder="#000000"
               />
@@ -274,10 +453,10 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
               {buttonStyles.map((style) => (
                 <button
                   key={style.id}
-                  onClick={() => onDesignUpdate({ button_style: style.id as typeof user.button_style })}
+                  onClick={() => handleDesignChange({ button_style: style.id as typeof user.button_style })}
                   className={`
                     p-4 rounded-xl border-2 transition-all
-                    ${user.button_style === style.id
+                    ${effectiveDesign.button_style === style.id
                       ? 'border-blue-500 bg-blue-500/10'
                       : 'border-gray-700 hover:border-gray-600 bg-gray-800/30'
                     }
@@ -290,7 +469,7 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
                     ${style.id === 'square' && 'rounded-none'}
                     ${style.id === 'glass' && 'rounded-lg bg-white/10 backdrop-blur'}
                     bg-current
-                  `} style={{ color: user.button_color }}
+                  `} style={{ color: effectiveDesign.button_color }}
                   />
                   <p className="font-medium text-white">{style.name}</p>
                 </button>
@@ -305,14 +484,14 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
               {presetColors.map((color) => (
                 <button
                   key={color}
-                  onClick={() => onDesignUpdate({ button_color: color })}
+                  onClick={() => handleDesignChange({ button_color: color })}
                   className={`
                     aspect-square rounded-xl transition-all
-                    ${user.button_color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}
+                    ${effectiveDesign.button_color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}
                   `}
                   style={{ backgroundColor: color }}
                 >
-                  {user.button_color === color && (
+                  {effectiveDesign.button_color === color && (
                     <FiCheck className={`w-5 h-5 mx-auto ${color === '#ffffff' ? 'text-black' : 'text-white'}`} />
                   )}
                 </button>
@@ -331,8 +510,8 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
         >
           <div className="glass-card rounded-2xl p-6">
             <BackgroundCustomizer
-              currentType={user.background_type}
-              currentValue={user.background_value}
+              currentType={effectiveDesign.background_type}
+              currentValue={effectiveDesign.background_value}
               userId=""
               onChange={handleBackgroundChange}
             />

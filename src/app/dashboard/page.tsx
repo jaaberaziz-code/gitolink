@@ -116,8 +116,23 @@ export default function DashboardPage() {
   }
 
   const handleDesignUpdate = async (design: Partial<DesignCustomization>) => {
-    // Optimistically update the user state
-    setUser(prev => prev ? { ...prev, ...design } : null)
+    // Save to database
+    const res = await fetch('/api/auth/me', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(design),
+    })
+    
+    if (!res.ok) {
+      const error = await res.json()
+      throw new Error(error.error || 'Failed to save design changes')
+    }
+    
+    const data = await res.json()
+    
+    // Update local state with the returned user data
+    setUser(prev => prev ? { ...prev, ...data.user } : null)
+    return data.user
   }
 
   if (loading || !user) {
