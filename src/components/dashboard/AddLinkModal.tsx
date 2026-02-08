@@ -2,14 +2,15 @@
 
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { FiX } from 'react-icons/fi'
+import { FiX, FiLoader } from 'react-icons/fi'
 
 interface AddLinkModalProps {
   onClose: () => void
   onSuccess: () => void
+  onAdd: (data: { title: string; url: string; icon?: string }) => Promise<void>
 }
 
-export default function AddLinkModal({ onClose, onSuccess }: AddLinkModalProps) {
+export default function AddLinkModal({ onClose, onAdd }: AddLinkModalProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -19,37 +20,46 @@ export default function AddLinkModal({ onClose, onSuccess }: AddLinkModalProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate URL
+    let url = formData.url.trim()
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`
+    }
+
     setLoading(true)
 
     try {
-      const res = await fetch('/api/links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      await onAdd({
+        title: formData.title.trim(),
+        url,
+        icon: formData.icon || undefined,
       })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to add link')
-      }
-
-      toast.success('Link added successfully!')
-      onSuccess()
+      // Modal is closed by parent on success
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to add link')
+      // Error is handled by parent
+      console.error('Add link error:', error)
     } finally {
       setLoading(false)
     }
   }
 
+  const handleClose = () => {
+    if (!loading) {
+      onClose()
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-dark rounded-xl p-6 w-full max-w-md animate-slide-up">
+      <div className="glass-dark rounded-xl p-6 w-full max-w-md animate-slide-up relative"
+      >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-white">Add New Link</h2>
           <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            onClick={handleClose}
+            disabled={loading}
+            className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
           >
             <FiX className="w-6 h-6" />
           </button>
@@ -63,9 +73,10 @@ export default function AddLinkModal({ onClose, onSuccess }: AddLinkModalProps) 
             <input
               type="text"
               required
+              disabled={loading}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               placeholder="My Website"
             />
           </div>
@@ -75,13 +86,15 @@ export default function AddLinkModal({ onClose, onSuccess }: AddLinkModalProps) 
               URL *
             </label>
             <input
-              type="url"
+              type="text"
               required
+              disabled={loading}
               value={formData.url}
               onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               placeholder="https://example.com"
             />
+            <p className="text-xs text-gray-500 mt-1">We'll add https:// if you don't include it</p>
           </div>
 
           <div>
@@ -90,8 +103,9 @@ export default function AddLinkModal({ onClose, onSuccess }: AddLinkModalProps) 
             </label>
             <select
               value={formData.icon}
+              disabled={loading}
               onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
               <option value="">No icon</option>
               <option value="website">Website</option>
@@ -111,10 +125,17 @@ export default function AddLinkModal({ onClose, onSuccess }: AddLinkModalProps) 
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white py-3 rounded-lg font-semibold transition-colors"
+            disabled={loading || !formData.title.trim() || !formData.url.trim()}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
           >
-            {loading ? 'Adding...' : 'Add Link'}
+            {loading ? (
+              <>
+                <FiLoader className="w-5 h-5 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              'Add Link'
+            )}
           </button>
         </form>
       </div>

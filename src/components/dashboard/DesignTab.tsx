@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { FiLayout, FiType, FiImage, FiGrid, FiCheck, FiRotateCcw, FiSave, FiAlertCircle } from 'react-icons/fi'
+import { FiLayout, FiType, FiImage, FiGrid, FiCheck, FiRotateCcw, FiSave, FiAlertCircle, FiLoader } from 'react-icons/fi'
 import { BsPalette } from 'react-icons/bs'
 import { ImageUpload } from '@/components/upload/ImageUpload'
 import { ImageCrop } from '@/components/upload/ImageCrop'
@@ -29,7 +29,7 @@ interface DesignUser {
 interface DesignTabProps {
   user: DesignUser
   links: Link[]
-  onDesignUpdate: (design: Partial<DesignUser>) => void
+  onDesignUpdate: (design: Partial<DesignUser>) => Promise<any>
 }
 
 const presetColors = [
@@ -60,11 +60,14 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   
-  // State management for pending changes
-  const [pendingChanges, setPendingChanges] = useState<Partial<DesignUser>>({})
+  // State management for optimistic updates
+  const [displayState, setDisplayState] = useState<DesignUser>(user)
   const [savedState, setSavedState] = useState<DesignUser>(user)
   const [isSaving, setIsSaving] = useState(false)
-  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
+  const [hasErrors, setHasErrors] = useState(false)
+  
+  // Track pending changes
+  const [pendingChanges, setPendingChanges] = useState<Partial<DesignUser>>({})
   
   // Ref to track if component is mounted
   const isMounted = useRef(true)
@@ -75,10 +78,13 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
   // Check if there are unsaved changes
   const hasUnsavedChanges = Object.keys(pendingChanges).length > 0
 
-  // Update saved state when user prop changes (initial load)
+  // Update states when user prop changes (initial load)
   useEffect(() => {
     if (isMounted.current) {
       setSavedState(user)
+      setDisplayState(user)
+      setPendingChanges({})
+      setHasErrors(false)
     }
   }, [user])
 
@@ -105,29 +111,45 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
     }
   }, [])
 
-  // Handle pending design changes (draft mode)
+  // Handle design changes with optimistic updates
   const handleDesignChange = useCallback((changes: Partial<DesignUser>) => {
+    // Update pending changes
     setPendingChanges(prev => ({ ...prev, ...changes }))
+    // Immediately update display for optimistic feedback
+    setDisplayState(prev => ({ ...prev, ...changes }))
+    setHasErrors(false)
   }, [])
 
-  // Apply changes to the database
+  // Apply changes to the database with rollback on error
   const handleApplyChanges = async () => {
     if (!hasUnsavedChanges) return
 
+    const originalState = { ...savedState }
+    
     setIsSaving(true)
     try {
       // Call the parent's onDesignUpdate with all pending changes
-      await onDesignUpdate(pendingChanges)
+      const result = await onDesignUpdate(pendingChanges)
       
       // Update saved state with pending changes
-      setSavedState(prev => ({ ...prev, ...pendingChanges }))
+      const newState = { ...savedState, ...pendingChanges }
+      setSavedState(newState)
+      setDisplayState(newState)
       
       // Clear pending changes
       setPendingChanges({})
+      setHasErrors(false)
       
       toast.success('Design changes saved successfully!')
+      return result
     } catch (error: any) {
+      // Rollback on error
+      setDisplayState(originalState)
+      setSavedState(originalState)
+      setPendingChanges({})
+      setHasErrors(true)
       toast.error(error.message || 'Failed to save changes')
+      throw error
     } finally {
       setIsSaving(false)
     }
@@ -137,7 +159,10 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
   const handleReset = () => {
     if (!hasUnsavedChanges) return
     
+    // Rollback display to saved state
+    setDisplayState(savedState)
     setPendingChanges({})
+    setHasErrors(false)
     toast('Changes discarded', { icon: '↩️' })
   }
 
@@ -148,7 +173,7 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
     )
     
     if (confirmReset) {
-      setPendingChanges({
+      const defaultChanges = {
         layout: defaultDesign.layout,
         font_family: defaultDesign.font_family,
         title_color: defaultDesign.title_color,
@@ -156,7 +181,10 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
         button_color: defaultDesign.button_color,
         background_type: defaultDesign.background_type,
         background_value: defaultDesign.background_value,
-      })
+      }
+      
+      setPendingChanges(defaultChanges)
+      setDisplayState(prev => ({ ...prev, ...defaultChanges }))
       toast('Default values loaded. Click Apply to save.', { icon: 'ℹ️' })
     }
   }
@@ -203,6 +231,7 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
           toast.success('Profile image updated!')
         }
       } else {
+        // Optimistically update background
         handleDesignChange({ background_type: 'image', background_value: data.url })
         toast.success('Background image added to draft!')
       }
@@ -240,6 +269,12 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
                 Unsaved changes
               </span>
             )}
+            {hasErrors && (
+              <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full flex items-center gap-1">
+                <FiAlertCircle className="w-3 h-3" />
+                Save failed
+              </span>
+            )}
           </div>
           <p className="text-gray-400 text-sm">Customize your profile design</p>
         </div>
@@ -271,7 +306,7 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
           >
             {isSaving ? (
               <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <FiLoader className="w-4 h-4 animate-spin" />
                 Saving...
               </>
             ) : (
@@ -297,6 +332,29 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
             <p className="text-amber-200 text-sm font-medium">You have unsaved changes</p>
             <p className="text-amber-200/70 text-xs">Click "Apply Changes" to save your modifications, or "Reset" to discard them.</p>
           </div>
+        </motion.div>
+      )}
+
+      {/* Error Banner */}
+      {hasErrors && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3"
+        >
+          <FiAlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-red-200 text-sm font-medium">Failed to save changes</p>
+            <p className="text-red-200/70 text-xs">Your changes have been reverted. Please try again.</p>
+          </div>
+          <button
+            onClick={handleApplyChanges}
+            disabled={isSaving}
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors disabled:opacity-50"
+          >
+            Retry
+          </button>
         </motion.div>
       )}
 

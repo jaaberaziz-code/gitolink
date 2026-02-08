@@ -5,29 +5,21 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { DashboardSkeleton, AnalyticsSkeleton, LinkItemSkeleton, SidebarSkeleton, CardSkeleton, Skeleton } from '@/components/ui/Skeleton'
+import { DashboardSkeleton, AnalyticsSkeleton } from '@/components/ui/Skeleton'
+import LinkList from '@/components/dashboard/LinkList'
+import AddLinkModal from '@/components/dashboard/AddLinkModal'
 import {
   FiPlus, FiLogOut, FiExternalLink, FiCopy, FiBarChart2, FiImage,
   FiTrendingUp, FiUser, FiLink, FiSettings, FiEye,
   FiTrash2, FiEdit2, FiCheck, FiX, FiChevronUp, FiChevronDown, FiSmartphone, FiLayers,
   FiLayout, FiType
 } from 'react-icons/fi'
-import {
-  FaGlobe, FaTwitter, FaInstagram, FaYoutube, FaTiktok, FaGithub,
-  FaLinkedin, FaFacebook, FaTwitch, FaDiscord, FaSpotify, FaSnapchat,
-  FaPinterest, FaReddit, FaTelegram, FaWhatsapp,
-} from 'react-icons/fa'
 import type { User, Link as LinkType, DesignCustomization } from '@/types'
 import { themes } from '@/lib/utils'
 import DesignTab from '@/components/dashboard/DesignTab'
 
 const iconMap: Record<string, React.ComponentType> = {
-  website: FaGlobe, twitter: FaTwitter, instagram: FaInstagram,
-  youtube: FaYoutube, tiktok: FaTiktok, github: FaGithub,
-  linkedin: FaLinkedin, facebook: FaFacebook, twitch: FaTwitch,
-  discord: FaDiscord, spotify: FaSpotify, snapchat: FaSnapchat,
-  pinterest: FaPinterest, reddit: FaReddit, telegram: FaTelegram,
-  whatsapp: FaWhatsapp,
+  website: FiExternalLink,
 }
 
 type TabType = 'links' | 'appearance' | 'analytics' | 'design'
@@ -40,15 +32,24 @@ interface AnalyticsData {
   timelineData: { date: string; count: number }[]
 }
 
+// Type for optimistic links
+interface OptimisticLink extends LinkType {
+  isOptimistic?: boolean
+  isUpdating?: boolean
+  isDeleting?: boolean
+  originalData?: LinkType // Store original data for rollback
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [links, setLinks] = useState<LinkType[]>([])
+  const [links, setLinks] = useState<OptimisticLink[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('links')
   const [previewTheme, setPreviewTheme] = useState<string | null>(null)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
 
   const displayTheme = previewTheme || user?.theme || 'cyberpunk'
 
@@ -96,44 +97,243 @@ export default function DashboardPage() {
     finally { setAnalyticsLoading(false) }
   }
 
+  // ============ OPTIMISTIC ADD LINK ============
+  const handleAddLink = async (formData: { title: string; url: string; icon?: string }) => {
+    const tempId = `temp-${Date.now()}`
+    const optimisticLink: OptimisticLink = {
+      id: tempId,
+      title: formData.title,
+      url: formData.url,
+      icon: formData.icon || null,
+      order: links.length,
+      active: true,
+      userId: user?.id || '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      _count: { clicks: 0 },
+      isOptimistic: true,
+    }
+
+    // Optimistically add to UI
+    setLinks(prev => [...prev, optimisticLink])
+    setShowAddModal(false)
+    toast.success('Link added!')
+
+    try {
+      // Save to server
+      const res = await fetch('/api/links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to add link')
+      }
+
+      const { link: savedLink } = await res.json()
+      
+      // Replace temp with real
+      setLinks(prev => prev.map(l => l.id === tempId ? { ...savedLink, _count: { clicks: 0 } } : l))
+      toast.success('Link saved to server')
+    } catch (error) {
+      // Rollback on error
+      setLinks(prev => prev.filter(l => l.id !== tempId))
+      toast.error(error instanceof Error ? error.message : 'Failed to add link')
+      setShowAddModal(true) // Re-open modal so user can retry
+    }
+  }
+
+  // ============ OPTIMISTIC UPDATE LINK ============
+  const handleUpdateLink = async (id: string, updates: Partial<LinkType>) => {
+    const linkToUpdate = links.find(l => l.id === id)
+    if (!linkToUpdate) return
+
+    const originalData = { ...linkToUpdate }
+
+    // Optimistically update UI
+    setLinks(prev => prev.map(l => 
+      l.id === id 
+        ? { ...l, ...updates, isUpdating: true, originalData } 
+        : l
+    ))
+
+    try {
+      const res = await fetch(`/api/links/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to update link')
+      }
+
+      const { link: updatedLink } = await res.json()
+      
+      // Update with server data and remove updating state
+      setLinks(prev => prev.map(l => 
+        l.id === id 
+          ? { ...updatedLink, _count: l._count, isUpdating: false, originalData: undefined } 
+          : l
+      ))
+      toast.success('Link updated')
+    } catch (error) {
+      // Rollback on error
+      setLinks(prev => prev.map(l => 
+        l.id === id && l.originalData 
+          ? { ...l.originalData, isUpdating: false, originalData: undefined } 
+          : l
+      ))
+      toast.error(error instanceof Error ? error.message : 'Failed to update link')
+    }
+  }
+
+  // ============ OPTIMISTIC DELETE LINK ============
+  const handleDeleteLink = async (id: string) => {
+    const linkToDelete = links.find(l => l.id === id)
+    if (!linkToDelete) return
+
+    const originalLinks = [...links]
+
+    // Optimistically remove from UI
+    setLinks(prev => prev.filter(l => l.id !== id))
+    toast.success('Link deleted')
+
+    try {
+      const res = await fetch(`/api/links/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to delete link')
+      }
+    } catch (error) {
+      // Rollback on error
+      setLinks(originalLinks)
+      toast.error('Failed to delete link')
+    }
+  }
+
+  // ============ OPTIMISTIC REORDER LINKS ============
+  const handleReorderLinks = async (newOrder: string[]) => {
+    const originalLinks = [...links]
+    
+    // Create a map for quick lookup
+    const linkMap = new Map(links.map(l => [l.id, l]))
+    
+    // Optimistically reorder UI
+    const reorderedLinks = newOrder
+      .map(id => linkMap.get(id))
+      .filter((l): l is OptimisticLink => l !== undefined)
+      .map((l, index) => ({ ...l, order: index }))
+    
+    setLinks(reorderedLinks)
+
+    try {
+      // Save new order to server
+      await fetch(`/api/links/${newOrder[0]}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ linkIds: newOrder }),
+      })
+      toast.success('Order saved')
+    } catch (error) {
+      // Rollback on error
+      setLinks(originalLinks)
+      toast.error('Failed to reorder links')
+    }
+  }
+
+  // ============ OPTIMISTIC TOGGLE ACTIVE ============
+  const handleToggleActive = async (id: string) => {
+    const link = links.find(l => l.id === id)
+    if (!link) return
+
+    const newActiveState = !link.active
+    
+    // Optimistically toggle
+    setLinks(prev => prev.map(l => 
+      l.id === id ? { ...l, active: newActiveState } : l
+    ))
+
+    try {
+      const res = await fetch(`/api/links/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: newActiveState }),
+      })
+
+      if (!res.ok) throw new Error('Failed to update')
+      
+      toast.success(newActiveState ? 'Link visible' : 'Link hidden')
+    } catch (error) {
+      // Rollback
+      setLinks(prev => prev.map(l => 
+        l.id === id ? { ...l, active: !newActiveState } : l
+      ))
+      toast.error('Failed to update link')
+    }
+  }
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/')
   }
 
   const handleThemeChange = async (themeId: string) => {
+    const originalTheme = user?.theme
+    
+    // Optimistically update theme
+    setUser(prev => prev ? { ...prev, theme: themeId } : null)
+    setPreviewTheme(themeId)
+
     try {
       const res = await fetch('/api/auth/me', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme: themeId }),
       })
-      if (res.ok) {
-        setUser(prev => prev ? { ...prev, theme: themeId } : null)
-        setPreviewTheme(themeId)
-        toast.success('Theme updated!')
-      }
-    } catch { toast.error('Failed to update theme') }
+      if (!res.ok) throw new Error('Failed to update theme')
+      toast.success('Theme updated!')
+    } catch {
+      // Rollback
+      setUser(prev => prev ? { ...prev, theme: originalTheme || 'cyberpunk' } : null)
+      setPreviewTheme(originalTheme || 'cyberpunk')
+      toast.error('Failed to update theme')
+    }
   }
 
   const handleDesignUpdate = async (design: Partial<DesignCustomization>) => {
-    // Save to database
-    const res = await fetch('/api/auth/me', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(design),
-    })
+    const originalUser = user ? { ...user } : null
     
-    if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.error || 'Failed to save design changes')
+    // Optimistically update design
+    setUser(prev => prev ? { ...prev, ...design } : null)
+
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(design),
+      })
+      
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to save design changes')
+      }
+      
+      const data = await res.json()
+      setUser(prev => prev ? { ...prev, ...data.user } : null)
+      return data.user
+    } catch (error: any) {
+      // Rollback on error
+      if (originalUser) {
+        setUser(originalUser)
+      }
+      throw error
     }
-    
-    const data = await res.json()
-    
-    // Update local state with the returned user data
-    setUser(prev => prev ? { ...prev, ...data.user } : null)
-    return data.user
   }
 
   if (loading || !user) {
@@ -218,47 +418,34 @@ export default function DashboardPage() {
                       <h1 className="text-2xl font-bold text-white">Your Links</h1>
                       <p className="text-gray-400 text-sm">Manage and organize your links</p>
                     </div>
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      <FiPlus className="w-5 h-5" />
+                      Add Link
+                    </button>
                   </div>
 
                   {links.length === 0 ? (
                     <div className="glass-card rounded-2xl p-12 text-center">
                       <FiLink className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                       <p className="text-gray-400 mb-4">No links yet</p>
-                      <p className="text-gray-500 text-sm">Add your first link to get started!</p>
+                      <button
+                        onClick={() => setShowAddModal(true)}
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      >
+                        Add Your First Link
+                      </button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {links.map((link, index) => {
-                        const Icon = link.icon ? iconMap[link.icon] : FaGlobe
-                        return (
-                          <motion.div
-                            key={link.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="glass-card rounded-xl p-4"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                                {Icon && <Icon className="w-5 h-5 text-white" />}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-white font-medium truncate">{link.title}</h3>
-                                <p className="text-gray-400 text-sm truncate">{link.url}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`px-2 py-1 rounded-full text-xs ${link.active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                                  {link.active ? 'Active' : 'Inactive'}
-                                </span>
-                                <button onClick={() => { navigator.clipboard.writeText(link.url); toast.success('Copied!') }} className="p-2 text-gray-400 hover:text-white">
-                                  <FiCopy className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )
-                      })}
-                    </div>
+                    <LinkList 
+                      links={links}
+                      onUpdateLink={handleUpdateLink}
+                      onDeleteLink={handleDeleteLink}
+                      onReorderLinks={handleReorderLinks}
+                      onToggleActive={handleToggleActive}
+                    />
                   )}
                 </motion.div>
               )}
@@ -423,6 +610,17 @@ export default function DashboardPage() {
           </main>
         </div>
       </div>
+
+      {/* Add Link Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <AddLinkModal
+            onClose={() => setShowAddModal(false)}
+            onSuccess={() => {}}
+            onAdd={handleAddLink}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
