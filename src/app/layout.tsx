@@ -1,10 +1,20 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { ErrorBoundary } from '@/components/error-boundary'
 
-const inter = Inter({ subsets: ['latin'] })
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+})
+
+const jetbrainsMono = JetBrains_Mono({ 
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'GitoLink - Your Links, Your Brand, Your Analytics',
@@ -19,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={inter.className}>
+      <body className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans`}>
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
