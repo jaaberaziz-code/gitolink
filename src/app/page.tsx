@@ -90,7 +90,7 @@ export default function LandingPage() {
             <Link href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">
               Features
             </Link>
-            <Link href="#themes" className="text-sm text-gray-400 hover:text-white transition-colors">
+            <Link href="/themes" className="text-sm text-gray-400 hover:text-white transition-colors">
               Themes
             </Link>
             <Link href="#pricing" className="text-sm text-gray-400 hover:text-white transition-colors">
@@ -124,7 +124,7 @@ export default function LandingPage() {
         {isMenuOpen && (
           <div className="md:hidden bg-black border-b border-gray-800 px-6 py-4 space-y-4">
             <Link href="#features" className="block text-gray-400 hover:text-white">Features</Link>
-            <Link href="#themes" className="block text-gray-400 hover:text-white">Themes</Link>
+            <Link href="/themes" className="block text-gray-400 hover:text-white">Themes</Link>
             <Link href="#pricing" className="block text-gray-400 hover:text-white">Pricing</Link>
             <Link href="/login" className="block text-gray-400 hover:text-white">Login</Link>
             <Link href="/register" className="block text-white font-medium">Get Started</Link>
@@ -525,9 +525,9 @@ export default function LandingPage() {
             <div>
               <h4 className="font-medium mb-4 text-sm">Product</h4>
               <ul className="space-y-2 text-sm text-gray-500 font-mono">
-                <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="#themes" className="hover:text-white transition-colors">Themes</Link></li>
-                <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
+                <li><Link href="/themes" className="hover:text-white transition-colors">Themes</Link></li>
+                <li><Link href="/#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                 <li><Link href="/api" className="hover:text-white transition-colors">API</Link></li>
               </ul>
             </div>
