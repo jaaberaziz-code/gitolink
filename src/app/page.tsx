@@ -361,6 +361,129 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 px-6 border-t border-gray-900 bg-black">
+        <div className="max-w-5xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">SIMPLE PRICING</h2>
+            <div className="w-16 h-[2px] bg-[#00FF41] mx-auto mb-6" />
+            <p className="text-gray-400 font-mono max-w-md mx-auto">
+              Start free. Upgrade when you need more power.
+            </p>
+          </motion.div>
+
+          {/* Pricing Cards */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="relative p-8 bg-gray-900 border border-gray-800"
+            >
+              <div className="mb-8">
+                <h3 className="text-sm font-mono text-gray-500 mb-2 tracking-wider">FREE</h3>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-5xl font-bold">$0</span>
+                  <span className="text-gray-500 font-mono">/month</span>
+                </div>
+                <p className="text-gray-400 mt-4">Perfect for getting started</p>
+              </div>
+
+              <ul className="space-y-4 mb-8">
+                {['Unlimited links', 'All 20+ themes', 'Basic analytics', 'Mobile responsive', 'Custom username', 'QR codes', 'Community support'].map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <span className="text-gray-500">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                    <span className="text-gray-300 text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/register"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-white text-black font-bold hover:bg-gray-200 transition-colors"
+              >
+                Get Started Free
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </motion.div>
+
+            {/* Pro Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="relative p-8 bg-gray-900 border-2 border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]"
+            >
+              {/* Popular Badge */}
+              <div className="absolute -top-px left-1/2 -translate-x-1/2">
+                <div className="bg-[#00FF41] text-black text-xs font-bold px-4 py-1 font-mono uppercase">
+                  Most Popular
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <h3 className="text-sm font-mono text-gray-500 mb-2 tracking-wider">PRO</h3>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-5xl font-bold">$6</span>
+                  <span className="text-gray-500 font-mono">/month</span>
+                </div>
+                <p className="text-[#00FF41] text-sm font-mono">Or $60/year (save 17%)</p>
+                <p className="text-gray-400 mt-4">For serious creators</p>
+              </div>
+
+              <ul className="space-y-4 mb-8">
+                {['Everything in Free', 'Advanced analytics', 'Custom domains', 'Remove branding', 'Priority support', 'Scheduled links', 'Link expiration', 'API access', 'Team collaboration'].map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <span className="text-[#00FF41]">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                    <span className="text-gray-300 text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/register?plan=pro"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#00FF41] text-black font-bold hover:bg-[#00CC33] hover:shadow-[0_0_20px_rgba(0,255,65,0.3)] transition-all"
+              >
+                Start Pro Trial
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Trust Note */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-16 text-center"
+          >
+            <p className="text-gray-500 font-mono text-sm">
+              No credit card required for Free. Cancel Pro anytime.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 px-6 border-t border-gray-900">
         <div className="max-w-4xl mx-auto text-center">
