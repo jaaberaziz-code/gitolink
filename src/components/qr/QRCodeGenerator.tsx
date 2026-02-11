@@ -275,7 +275,7 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
                   <div
                     dangerouslySetInnerHTML={{ __html: svgContent }}
                     style={{ width: sizeMap[settings.size], height: sizeMap[settings.size] }}
-                  /
+                  ></div>
                 ) : null}
                 
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-black px-4 py-1">

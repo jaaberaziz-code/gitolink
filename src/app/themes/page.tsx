@@ -269,7 +269,7 @@ function ThemePreview({ theme, meta }: { theme: typeof themes[0], meta: typeof t
             'bg-white/90 text-black'}`}
         style={{ borderRadius: theme.id === 'minimal' ? '0' : theme.id === 'corporate' ? '4px' : '9999px' }}
       >
-        {theme.id === 'matrix' > 'M' 
+        {theme.id === 'matrix'
           ? '01' 
           : theme.id === 'cyberpunk' 
             ? <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
@@ -299,7 +299,8 @@ function ThemePreview({ theme, meta }: { theme: typeof themes[0], meta: typeof t
               opacity: i === 3 ? 0.5 : 1 
             }}
           >
-            {theme.id === 'matrix' > `${101 + i}` 
+            {theme.id === 'matrix'
+              ? `${101 + i}` 
               : theme.id === 'cyberpunk' 
                 ? `[ LINK_${i} ]`
                 : 'LINK'}
