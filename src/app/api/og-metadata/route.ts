@@ -92,18 +92,18 @@ export async function GET(req: NextRequest) {
       const link = await prisma.link.findUnique({
         where: { id: linkId },
         select: {
-          ogTitle: true,
-          ogDescription: true,
-          ogImage: true,
-          ogCacheAt: true
+          og_title: true,
+          og_description: true,
+          og_image: true,
+          og_cache_at: true
         }
       })
 
-      if (link?.ogCacheAt && Date.now() - new Date(link.ogCacheAt).getTime() < CACHE_TTL) {
+      if (link?.og_cache_at && Date.now() - new Date(link.og_cache_at).getTime() < CACHE_TTL) {
         const metadata = {
-          title: link.ogTitle || '',
-          description: link.ogDescription || '',
-          image: link.ogImage || ''
+          title: link.og_title || '',
+          description: link.og_description || '',
+          image: link.og_image || ''
         }
         ogCache.set(cacheKey, { data: metadata, timestamp: Date.now() })
         return NextResponse.json({ metadata })
@@ -128,10 +128,10 @@ export async function GET(req: NextRequest) {
       await prisma.link.update({
         where: { id: linkId },
         data: {
-          ogTitle: metadata.title,
-          ogDescription: metadata.description,
-          ogImage: metadata.image,
-          ogCacheAt: new Date()
+          og_title: metadata.title,
+          og_description: metadata.description,
+          og_image: metadata.image,
+          og_cache_at: new Date()
         }
       })
     }

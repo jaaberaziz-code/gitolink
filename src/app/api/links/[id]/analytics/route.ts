@@ -39,7 +39,7 @@ export async function GET(
     }
 
     // Get total click events for this link
-    const totalClickEvents = await prisma.clickEvent.count({
+    const totalClickEvents = await prisma.click.count({
       where: {
         linkId: params.id,
         createdAt: { gte: startDate },
@@ -49,7 +49,7 @@ export async function GET(
     // Get timeline data
     const rawTimeline = await prisma.$queryRaw`
       SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count
-      FROM "ClickEvent"
+      FROM "Click"
       WHERE "linkId" = ${params.id}
         AND "createdAt" >= ${startDate}
       GROUP BY DATE_TRUNC('day', "createdAt")
@@ -62,7 +62,7 @@ export async function GET(
     }))
 
     // Get device stats
-    const deviceStats = await prisma.clickEvent.groupBy({
+    const deviceStats = await prisma.click.groupBy({
       by: ['device'],
       where: {
         linkId: params.id,
@@ -74,7 +74,7 @@ export async function GET(
     })
 
     // Get browser stats
-    const browserStats = await prisma.clickEvent.groupBy({
+    const browserStats = await prisma.click.groupBy({
       by: ['browser'],
       where: {
         linkId: params.id,
@@ -86,7 +86,7 @@ export async function GET(
     })
 
     // Get referrer stats
-    const referrerStats = await prisma.clickEvent.groupBy({
+    const referrerStats = await prisma.click.groupBy({
       by: ['referrer'],
       where: {
         linkId: params.id,
@@ -100,23 +100,23 @@ export async function GET(
     // Get hourly distribution (for heatmap)
     const hourlyDistribution = await prisma.$queryRaw`
       SELECT EXTRACT(HOUR FROM "createdAt") as hour, COUNT(*) as count
-      FROM "ClickEvent"
+      FROM "Click"
       WHERE "linkId" = ${params.id}
         AND "createdAt" >= ${startDate}
       GROUP BY EXTRACT(HOUR FROM "createdAt")
       ORDER BY hour ASC
     ` as { hour: number; count: bigint }[]
 
-    // Calculate CTR
-    const ctr = link.views > 0 ? (link.clicks / link.views) * 100 : 0
+    // Calculate CTR using denormalized counters
+    const ctr = link.viewCount > 0 ? (link.clickCount / link.viewCount) * 100 : 0
 
     return NextResponse.json({
       link: {
         id: link.id,
         title: link.title,
         url: link.url,
-        views: link.views,
-        clicks: link.clicks,
+        views: link.viewCount,
+        clicks: link.clickCount,
         ctr: Math.round(ctr * 100) / 100,
       },
       totalClickEvents,

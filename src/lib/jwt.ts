@@ -1,8 +1,15 @@
 import { SignJWT, jwtVerify } from 'jose'
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
-)
+// Ensure JWT_SECRET is set
+const secret = process.env.JWT_SECRET
+if (!secret) {
+  throw new Error(
+    'JWT_SECRET environment variable is not set. ' +
+    'Please set a strong random secret (at least 32 characters) in your .env file.'
+  )
+}
+
+const JWT_SECRET = new TextEncoder().encode(secret)
 
 export interface JWTPayload {
   userId: string

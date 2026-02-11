@@ -73,10 +73,10 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    // Timeline data
+    // Timeline data - use Prisma's queryRaw with proper escaping
     const rawTimeline = await prisma.$queryRaw`
       SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count
-      FROM "clicks"
+      FROM "Click"
       WHERE "userId" = ${user.userId}
         AND "createdAt" >= ${startDate}
       GROUP BY DATE_TRUNC('day', "createdAt")

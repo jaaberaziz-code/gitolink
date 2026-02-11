@@ -8,7 +8,16 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    // CRON_SECRET must be set in production
+    if (!cronSecret) {
+      console.error('CRON_SECRET not configured')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -22,6 +31,7 @@ export async function POST(req: NextRequest) {
       where: {
         scheduledAt: {
           lte: now,
+          not: null,
         },
         active: false,
       },
@@ -32,26 +42,27 @@ export async function POST(req: NextRequest) {
       where: {
         expiresAt: {
           lte: now,
+          not: null,
         },
         active: true,
       },
     })
 
     // Publish scheduled links
-    const publishPromises = linksToPublish.map(link =
-
-    prisma.link.update({
-      where: { id: link.id },
-      data: { active: true },
-    }))
+    const publishPromises = linksToPublish.map((link) =>
+      prisma.link.update({
+        where: { id: link.id },
+        data: { active: true },
+      })
+    )
 
     // Expire expired links
-    const expirePromises = linksToExpire.map(link =
-
-    prisma.link.update({
-      where: { id: link.id },
-      data: { active: false },
-    }))
+    const expirePromises = linksToExpire.map((link) =>
+      prisma.link.update({
+        where: { id: link.id },
+        data: { active: false },
+      })
+    )
 
     await Promise.all([...publishPromises, ...expirePromises])
 
@@ -59,12 +70,8 @@ export async function POST(req: NextRequest) {
       success: true,
       published: linksToPublish.length,
       expired: linksToExpire.length,
-      publishedIds: linksToPublish.map(l =
-
- l.id),
-      expiredIds: linksToExpire.map(l =
-
- l.id),
+      publishedIds: linksToPublish.map((l) => l.id),
+      expiredIds: linksToExpire.map((l) => l.id),
     })
   } catch (error) {
     console.error('Cron job error:', error)

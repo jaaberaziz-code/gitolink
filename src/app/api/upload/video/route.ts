@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     // Update user's background video
     await prisma.user.update({
       where: { id: user.userId },
-      data: { backgroundVideo: dataUrl }
+      data: { background_video: dataUrl }
     })
 
     return NextResponse.json({ 
@@ -86,7 +86,7 @@ export async function DELETE(req: NextRequest) {
     // Remove background video
     await prisma.user.update({
       where: { id: user.userId },
-      data: { backgroundVideo: null }
+      data: { background_video: null }
     })
 
     return NextResponse.json({ 

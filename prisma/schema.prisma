@@ -18,21 +18,24 @@ model User {
   avatar          String?
   avatar_url      String?  // Supabase Storage URL for avatar
   theme           String   @default("cyberpunk")
-  
+
   // Background customization
   background_type  String   @default("gradient") // 'gradient', 'solid', 'image'
   background_value String   @default("cyberpunk") // hex color, gradient CSS, or image URL
-  
+
+  // Video background support
+  background_video String?  @db.Text // Base64 encoded video or video URL
+
   // Custom CSS for advanced users
   custom_css      String?  @db.Text
-  
+
   // Design customization
   layout           String   @default("classic") // 'classic', 'hero', 'minimal'
   font_family      String   @default("Inter") // Google Font name
   title_color      String   @default("#ffffff") // Hex color for title text
   button_style     String   @default("rounded") // 'rounded', 'pill', 'square', 'glass'
   button_color     String   @default("#3b82f6") // Hex color for buttons
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -51,6 +54,20 @@ model Link {
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Scheduling
+  scheduledAt DateTime?
+  expiresAt   DateTime?
+
+  // OG Metadata caching
+  ogTitle       String?
+  ogDescription String?
+  ogImage       String?
+  ogCacheAt     DateTime?
+
+  // Denormalized counters for performance
+  clickCount Int @default(0)
+  viewCount  Int @default(0)
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   clicks Click[]
