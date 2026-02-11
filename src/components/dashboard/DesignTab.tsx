@@ -293,7 +293,7 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
     { id: 'typography' as SectionType, label: '02 TYPOGRAPHY', icon: Icons.type },
     { id: 'colors' as SectionType, label: '03 COLORS', icon: Icons.palette },
     { id: 'buttons' as SectionType, label: '04 BUTTONS', icon: Icons.grid },
-    { id: 'background' as SectionType, label: '05 BACKGROUND', icon: Icons.image },
+    { id: 'background' as SectionType, label: '05 APPEARANCE', icon: Icons.image },
   ]
 
   const themeObj = themes.find(t => t.id === effectiveDesign.theme) || themes[0]
