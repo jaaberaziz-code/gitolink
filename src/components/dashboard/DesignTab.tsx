@@ -122,18 +122,29 @@ const mockLinks = [
 // Mobile Preview Component
 function MobilePreview({ design }: { design: DesignUser }) {
   const getBackgroundStyle = () => {
-    if (design.background_type === 'image' && design.background_value) {
+    // Custom gradient
+    if (design.background_type === 'gradient' && design.background_value?.includes('gradient')) {
+      return { background: design.background_value }
+    }
+    // Solid color
+    if (design.background_type === 'solid' && design.background_value?.startsWith('#')) {
+      return { backgroundColor: design.background_value }
+    }
+    // Image
+    if (design.background_type === 'image' && design.background_value?.startsWith('http')) {
       return {
         backgroundImage: `url(${design.background_value})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }
     }
-    if (design.background_type === 'solid' && design.background_value) {
-      return { backgroundColor: design.background_value }
+    // Preset theme
+    if (design.background_type === 'preset') {
+      const theme = themes.find(t => t.id === design.theme)
+      return { background: theme?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
     }
-    const theme = themes.find(t => t.id === design.theme)
-    return { background: theme?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
+    // Default
+    return { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
   }
 
   const getButtonClass = () => {
@@ -522,43 +533,259 @@ export function DesignTab({ user, onDesignUpdate }: DesignTabProps) {
               </div>
             )}
 
-            {/* BACKGROUND SECTION */}
+            {/* APPEARANCE SECTION */}
             {activeSection === 'background' && (
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Select Theme</h3>
-                  <div className="grid grid-cols-4 gap-3">
-                    {themes.map((theme) => (
-                      <button
-                        key={theme.id}
-                        onClick={() => handleDesignChange({ theme: theme.id, background_type: 'gradient', background_value: theme.id })}
-                        className={`relative h-24 border-2 overflow-hidden transition-all
-                          ${effectiveDesign.theme === theme.id && effectiveDesign.background_type !== 'image'
-                            ? 'border-[#00FF41]' 
-                            : 'border-gray-800 hover:border-gray-600'}`}
-                      >
-                        <div className={`absolute inset-0 ${theme.class}`} />
-                        <span className="absolute bottom-0 left-0 right-0 p-2 bg-black/80 text-xs font-mono truncate">
-                          {theme.name}
-                        </span>
-                        {effectiveDesign.theme === theme.id && effectiveDesign.background_type !== 'image' && (
-                          <div className="absolute top-2 right-2 w-5 h-5 bg-[#00FF41] flex items-center justify-center">
-                            <span className="text-black">{Icons.check}</span>
+                {/* Background Type Tabs */}
+                <div className="flex gap-2 border-b border-gray-800 pb-4">
+                  {(['preset', 'gradient', 'solid', 'image'] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => handleDesignChange({ background_type: type, background_value: type === 'solid' ? '#000000' : type === 'gradient' ? 'custom' : effectiveDesign.background_value })}
+                      className={`px-4 py-2 text-sm font-mono uppercase transition-colors
+                        ${effectiveDesign.background_type === type
+                          ? 'bg-[#00FF41] text-black font-bold'
+                          : 'bg-[#0a0a0a] text-gray-400 border border-gray-800 hover:border-gray-600'
+                        }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+
+                {/* PRESET THEMES */}
+                {effectiveDesign.background_type === 'preset' && (
+                  <div>
+                    <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Select Theme</h3>
+                    <div className="grid grid-cols-4 gap-3">
+                      {themes.map((theme) => (
+                        <button
+                          key={theme.id}
+                          onClick={() => handleDesignChange({ theme: theme.id, background_value: theme.id })}
+                          className={`relative h-24 border-2 overflow-hidden transition-all
+                            ${effectiveDesign.theme === theme.id && effectiveDesign.background_type === 'preset'
+                              ? 'border-[#00FF41]' 
+                              : 'border-gray-800 hover:border-gray-600'}`}
+                        >
+                          <div className={`absolute inset-0 ${theme.class}`} />
+                          <span className="absolute bottom-0 left-0 right-0 p-2 bg-black/80 text-xs font-mono truncate">
+                            {theme.name}
+                          </span>
+                          {effectiveDesign.theme === theme.id && effectiveDesign.background_type === 'preset' && (
+                            <div className="absolute top-2 right-2 w-5 h-5 bg-[#00FF41] flex items-center justify-center">
+                              <span className="text-black">{Icons.check}</span>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* CUSTOM GRADIENT */}
+                {effectiveDesign.background_type === 'gradient' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Gradient Colors</h3>
+                      
+                      {/* Start Color */}
+                      <div className="flex items-center gap-4 mb-4">
+                        <span className="text-sm font-mono text-gray-400 w-16">START</span>
+                        <input
+                          type="color"
+                          value={effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/)?.[0] || '#667eea' : '#667eea'}
+                          onChange={(e) => {
+                            const endColor = effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/g)?.[1] || '#764ba2' : '#764ba2'
+                            handleDesignChange({ background_value: `linear-gradient(135deg, ${e.target.value} 0%, ${endColor} 100%)` })
+                          }}
+                          className="w-12 h-12 bg-transparent border-0 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/)?.[0] || '#667eea' : '#667eea'}
+                          onChange={(e) => {
+                            const endColor = effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/g)?.[1] || '#764ba2' : '#764ba2'
+                            handleDesignChange({ background_value: `linear-gradient(135deg, ${e.target.value} 0%, ${endColor} 100%)` })
+                          }}
+                          className="flex-1 bg-black border border-gray-800 px-3 py-2 text-white font-mono uppercase focus:border-[#00FF41] focus:outline-none"
+                          placeholder="#667eea"
+                        />
+                      </div>
+
+                      {/* End Color */}
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-mono text-gray-400 w-16">END</span>
+                        <input
+                          type="color"
+                          value={effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/g)?.[1] || '#764ba2' : '#764ba2'}
+                          onChange={(e) => {
+                            const startColor = effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/)?.[0] || '#667eea' : '#667eea'
+                            handleDesignChange({ background_value: `linear-gradient(135deg, ${startColor} 0%, ${e.target.value} 100%)` })
+                          }}
+                          className="w-12 h-12 bg-transparent border-0 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/g)?.[1] || '#764ba2' : '#764ba2'}
+                          onChange={(e) => {
+                            const startColor = effectiveDesign.background_value?.includes('gradient') ? effectiveDesign.background_value.match(/#[a-fA-F0-9]{6}/)?.[0] || '#667eea' : '#667eea'
+                            handleDesignChange({ background_value: `linear-gradient(135deg, ${startColor} 0%, ${e.target.value} 100%)` })
+                          }}
+                          className="flex-1 bg-black border border-gray-800 px-3 py-2 text-white font-mono uppercase focus:border-[#00FF41] focus:outline-none"
+                          placeholder="#764ba2"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Gradient Presets */}
+                    <div>
+                      <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Quick Presets</h3>
+                      <div className="grid grid-cols-6 gap-2">
+                        {[
+                          ['#667eea', '#764ba2'],
+                          ['#f093fb', '#f5576c'],
+                          ['#4facfe', '#00f2fe'],
+                          ['#43e97b', '#38f9d7'],
+                          ['#fa709a', '#fee140'],
+                          ['#a8edea', '#fed6e3'],
+                          ['#ff9a9e', '#fecfef'],
+                          ['#ffecd2', '#fcb69f'],
+                          ['#ff8a80', '#ea6100'],
+                          ['#84fab0', '#8fd3f4'],
+                          ['#a1c4fd', '#c2e9fb'],
+                          ['#fbc2eb', '#a6c1ee'],
+                        ].map(([start, end], i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleDesignChange({ background_value: `linear-gradient(135deg, ${start} 0%, ${end} 100%)` })}
+                            className={`h-12 border-2 transition-all ${
+                              effectiveDesign.background_value === `linear-gradient(135deg, ${start} 0%, ${end} 100%)`
+                                ? 'border-[#00FF41]'
+                                : 'border-gray-800 hover:border-gray-600'
+                            }`}
+                            style={{ background: `linear-gradient(135deg, ${start} 0%, ${end} 100%)` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SOLID COLOR */}
+                {effectiveDesign.background_type === 'solid' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Background Color</h3>
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="color"
+                          value={effectiveDesign.background_value?.startsWith('#') ? effectiveDesign.background_value : '#000000'}
+                          onChange={(e) => handleDesignChange({ background_value: e.target.value })}
+                          className="w-16 h-16 bg-transparent border-0 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={effectiveDesign.background_value?.startsWith('#') ? effectiveDesign.background_value : '#000000'}
+                            onChange={(e) => handleDesignChange({ background_value: e.target.value })}
+                            className="w-full bg-black border border-gray-800 px-4 py-3 text-white font-mono uppercase focus:border-[#00FF41] focus:outline-none"
+                            placeholder="#000000"
+                          />
+                          <p className="text-xs text-gray-600 font-mono mt-2">Enter hex color code</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Color Presets */}
+                    <div>
+                      <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Presets</h3>
+                      <div className="grid grid-cols-8 gap-2">
+                        {['#000000', '#1a1a1a', '#333333', '#666666', '#999999', '#cccccc', '#ffffff', '#00FF41',
+                          '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4',
+                          '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'
+                        ].map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => handleDesignChange({ background_value: color })}
+                            className={`aspect-square transition-all border-2
+                              ${effectiveDesign.background_value === color 
+                                ? 'border-white scale-110' 
+                                : 'border-transparent hover:scale-105'}`}
+                            style={{ backgroundColor: color }}
+                          >
+                            {effectiveDesign.background_value === color && (
+                              <span className={color === '#ffffff' ? 'text-black' : 'text-white'}>
+                                {Icons.check}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* IMAGE UPLOAD */}
+                {effectiveDesign.background_type === 'image' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Background Image</h3>
+                      
+                      {effectiveDesign.background_value?.startsWith('http') ? (
+                        <div className="relative aspect-video mb-4 border-2 border-[#00FF41] overflow-hidden">
+                          <img 
+                            src={effectiveDesign.background_value} 
+                            alt="Background" 
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            onClick={() => handleDesignChange({ background_value: '' })}
+                            className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-gray-700 p-12 text-center hover:border-gray-500 transition-colors cursor-pointer bg-[#0a0a0a]">
+                          <div className="flex justify-center mb-4">{Icons.upload}</div>
+                          <p className="text-sm text-gray-400 mb-2">Drop image here or click to upload</p>
+                          <p className="text-xs text-gray-600 font-mono">JPG, PNG up to 5MB</p>
+                          
+                          {/* URL Input for now */}
+                          <div className="mt-6 flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Or paste image URL"
+                              onChange={(e) => e.target.value && handleDesignChange({ background_value: e.target.value })}
+                              className="flex-1 bg-black border border-gray-800 px-3 py-2 text-sm text-white focus:border-[#00FF41] focus:outline-none"
+                            />
                           </div>
-                        )}
-                      </button>
-                    ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Image Settings */}
+                    {effectiveDesign.background_value?.startsWith('http') && (
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Image Settings</h3>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-400">Overlay Color</span>
+                          <input
+                            type="color"
+                            value="#000000"
+                            className="w-10 h-10 bg-transparent border-0 cursor-pointer"
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-400">Darken</span>
+                          <input type="range" min="0" max="100" className="w-32 accent-[#00FF41]" />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-mono text-gray-500 uppercase tracking-wider mb-4">Custom Background</h3>
-                  <div className="border-2 border-dashed border-gray-700 p-8 text-center hover:border-gray-500 transition-colors cursor-pointer">
-                    {Icons.upload}
-                    <p className="mt-2 text-sm text-gray-400">Drop image here or click to upload</p>
-                    <p className="text-xs text-gray-600 font-mono mt-1">JPG, PNG up to 5MB</p>
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </motion.div>
