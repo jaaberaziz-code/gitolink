@@ -56,6 +56,14 @@ export const themes = [
   // Special
   { id: 'glass', name: 'Glass Morphism', class: 'bg-white/10 backdrop-blur-xl border border-white/20', gradient: 'rgba(255,255,255,0.1)' },
   { id: 'rainbow', name: 'Pride Rainbow', class: 'bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500', gradient: 'linear-gradient(90deg, #ef4444 0%, #eab308 25%, #22c55e 50%, #3b82f6 75%, #a855f7 100%)' },
+  
+  // New Photo-Based Themes
+  { id: 'artemis', name: 'Artemis', class: 'bg-[#5C6B57]', gradient: '#5C6B57' },
+  { id: 'balcombe', name: 'Balcombe', class: 'bg-[#4A90A4]', gradient: 'linear-gradient(180deg, #4A90A4 0%, #7FB3C8 100%)' },
+  { id: 'boultont', name: 'Boultont', class: 'bg-[#8B7355]', gradient: 'linear-gradient(135deg, #8B7355 0%, #A89080 50%, #6B5344 100%)' },
+  { id: 'hanna', name: 'Hanna', class: 'bg-[#7A9E7E]', gradient: '#7A9E7E' },
+  { id: 'hay', name: 'Hay', class: 'bg-[#0099CC]', gradient: 'linear-gradient(180deg, #0099CC 0%, #00BBEE 100%)' },
+  { id: 'healeys', name: 'Healeys', class: 'bg-[#1a0a2e]', gradient: 'linear-gradient(135deg, #1a0a2e 0%, #4a1a6e 50%, #ff0066 100%)' },
 ]
 
 export function getThemeClass(themeId: string): string {

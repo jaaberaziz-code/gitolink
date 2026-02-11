@@ -79,6 +79,13 @@ const Icons = {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
     </svg>
+  ),
+  image: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
   )
 }
 
@@ -90,6 +97,7 @@ const themeCategories = [
   { id: 'gradient', label: 'GRADIENTS', icon: Icons.circle },
   { id: 'dark', label: 'DARK', icon: Icons.hexagon },
   { id: 'vibrant', label: 'VIBRANT', icon: Icons.star },
+  { id: 'photo', label: 'PHOTO', icon: Icons.image },
 ]
 
 // Theme metadata with unique preview configs
@@ -253,6 +261,55 @@ const themeMeta: Record<string, {
     buttonStyle: 'bg-white text-pink-600',
     textColor: 'text-white'
   },
+  // New Instagram-inspired themes
+  'artemis': { 
+    category: 'minimal', 
+    icon: Icons.circle, 
+    description: 'Olive wellness',
+    accentColor: '#5C6B57',
+    buttonStyle: 'bg-[#D4C5B5] text-[#5C6B57]',
+    textColor: 'text-white'
+  },
+  'balcombe': { 
+    category: 'gradient', 
+    icon: Icons.circle, 
+    description: 'Ocean breeze',
+    accentColor: '#4A90A4',
+    buttonStyle: 'bg-white text-[#4A90A4]',
+    textColor: 'text-white'
+  },
+  'boultont': { 
+    category: 'vibrant', 
+    icon: Icons.diamond, 
+    description: 'Desert adventure',
+    accentColor: '#8B7355',
+    buttonStyle: 'bg-[#D4A574] text-white',
+    textColor: 'text-white'
+  },
+  'hanna': { 
+    category: 'minimal', 
+    icon: Icons.music, 
+    description: 'Sage music',
+    accentColor: '#7A9E7E',
+    buttonStyle: 'bg-white text-[#7A9E7E]',
+    textColor: 'text-white'
+  },
+  'hay': { 
+    category: 'vibrant', 
+    icon: Icons.zap, 
+    description: 'Sporty blue',
+    accentColor: '#0099CC',
+    buttonStyle: 'bg-white text-[#0099CC]',
+    textColor: 'text-white'
+  },
+  'healeys': { 
+    category: 'gaming', 
+    icon: Icons.star, 
+    description: 'Tokyo neon',
+    accentColor: '#FF0066',
+    buttonStyle: 'bg-[#FF6B35] text-white',
+    textColor: 'text-white'
+  },
 }
 
 // Theme Preview Component - Renders unique visual for each theme
@@ -266,8 +323,15 @@ function ThemePreview({ theme, meta }: { theme: typeof themes[0], meta: typeof t
             theme.id === 'cyberpunk' ? 'border-2 border-[#00FF41] text-[#00FF41]' :
             theme.id === 'minimal' ? 'bg-black text-white' :
             theme.id === 'glass' ? 'bg-white/20 backdrop-blur border border-white/30' :
+            // New themes
+            theme.id === 'artemis' ? 'bg-[#D4C5B5] text-[#5C6B57] rounded-full' :
+            theme.id === 'balcombe' ? 'bg-white text-[#4A90A4] rounded-full' :
+            theme.id === 'boultont' ? 'bg-[#D4A574] text-white rounded-lg' :
+            theme.id === 'hanna' ? 'bg-white text-[#7A9E7E] rounded-full' :
+            theme.id === 'hay' ? 'bg-white text-[#0099CC] rounded-full' :
+            theme.id === 'healeys' ? 'bg-[#FF0066] text-white rounded-full border-2 border-[#FF6B35]' :
             'bg-white/90 text-black'}`}
-        style={{ borderRadius: theme.id === 'minimal' ? '0' : theme.id === 'corporate' ? '4px' : '9999px' }}
+        style={{ borderRadius: theme.id === 'minimal' ? '0' : theme.id === 'corporate' ? '4px' : undefined }}
       >
         {theme.id === 'matrix'
           ? '01' 
@@ -293,9 +357,16 @@ function ThemePreview({ theme, meta }: { theme: typeof themes[0], meta: typeof t
                 theme.id === 'matrix' ? 'bg-[#00FF41]/20 text-[#00FF41] font-mono' :
                 theme.id === 'minimal' ? 'border border-black/20 text-black' :
                 theme.id === 'glass' ? 'bg-white/10 backdrop-blur text-white border border-white/20' :
+                // New themes
+                theme.id === 'artemis' ? 'bg-[#D4C5B5] text-[#5C6B57] rounded-full' :
+                theme.id === 'balcombe' ? 'bg-white text-[#4A90A4] rounded-full' :
+                theme.id === 'boultont' ? 'bg-[#D4A574] text-white rounded-lg' :
+                theme.id === 'hanna' ? 'bg-white text-[#7A9E7E] rounded-full' :
+                theme.id === 'hay' ? 'bg-white text-[#0099CC] rounded-full' :
+                theme.id === 'healeys' ? 'bg-[#FF6B35] text-white rounded-lg' :
                 'bg-white/90 text-black'}`}
             style={{ 
-              borderRadius: theme.id === 'minimal' ? '0' : theme.id === 'corporate' ? '4px' : '9999px',
+              borderRadius: theme.id === 'minimal' ? '0' : theme.id === 'corporate' ? '4px' : undefined,
               opacity: i === 3 ? 0.5 : 1 
             }}
           >
