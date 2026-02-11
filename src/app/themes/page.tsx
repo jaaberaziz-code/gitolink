@@ -255,7 +255,7 @@ const themeMeta: Record<string, {
   },
 }
 
-// Theme Preview Component
+// Theme Preview Component - Renders unique visual for each theme
 function ThemePreview({ theme, meta }: { theme: typeof themes[0], meta: typeof themeMeta[string] }) {
   return (
     <div className="absolute inset-4 flex flex-col">
