@@ -1,21 +1,87 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { HexColorPicker } from 'react-colorful'
 import toast from 'react-hot-toast'
-import {
-  FiX,
-  FiDownload,
-  FiCopy,
-  FiPrinter,
-  FiSmartphone,
-  FiCheck,
-  FiRefreshCw,
-  FiShare2,
-  FiImage,
-  FiCode,
-} from 'react-icons/fi'
+
+// SVG Icons
+const Icons = {
+  x: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  download: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+  copy: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  ),
+  check: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="w-5 h-5">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  print: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <polyline points="6 9 6 2 18 2 18 9" />
+      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+      <rect x="6" y="14" width="12" height="8" />
+    </svg>
+  ),
+  phone: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
+      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+      <line x1="12" y1="18" x2="12.01" y2="18" />
+    </svg>
+  ),
+  refresh: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <polyline points="23 4 23 10 17 10" />
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+    </svg>
+  ),
+  share: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
+  ),
+  image: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  ),
+  code: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  ),
+  loader: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5 animate-spin">
+      <line x1="12" y1="2" x2="12" y2="6" />
+      <line x1="12" y1="18" x2="12" y2="22" />
+      <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+      <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+      <line x1="2" y1="12" x2="6" y2="12" />
+      <line x1="18" y1="12" x2="22" y2="12" />
+    </svg>
+  )
+}
 
 interface QRCodeGeneratorProps {
   username: string
@@ -41,6 +107,16 @@ const sizeMap: Record<QRSize, number> = {
   large: 400,
 }
 
+const presetColors = [
+  { fg: '#000000', bg: '#ffffff', name: 'CLASSIC' },
+  { fg: '#00FF41', bg: '#000000', name: 'MATRIX' },
+  { fg: '#000000', bg: '#00FF41', name: 'NEON' },
+  { fg: '#ffffff', bg: '#1f2937', name: 'DARK' },
+  { fg: '#3b82f6', bg: '#ffffff', name: 'BLUE' },
+  { fg: '#8b5cf6', bg: '#ffffff', name: 'PURPLE' },
+  { fg: '#000000', bg: '#f3f4f6', name: 'LIGHT' },
+]
+
 export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGeneratorProps) {
   const [settings, setSettings] = useState<QRSettings>({
     size: 'medium',
@@ -55,7 +131,6 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
   const [isGenerating, setIsGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState<'customize' | 'share'>('customize')
-  const qrRef = useRef<HTMLDivElement>(null)
 
   const profileUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://gitolink.vercel.app'}/${username}`
 
@@ -76,7 +151,7 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to generate QR code')
+      if (!response.ok) throw new Error('Failed to generate QR')
 
       const data = await response.json()
       
@@ -87,7 +162,7 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
         setSvgContent(data.svg)
         setQrDataUrl('')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate QR code')
     } finally {
       setIsGenerating(false)
@@ -95,9 +170,7 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
   }, [profileUrl, settings])
 
   useEffect(() => {
-    if (isOpen) {
-      generateQR()
-    }
+    if (isOpen) generateQR()
   }, [isOpen, generateQR])
 
   const handleDownload = () => {
@@ -108,18 +181,16 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      toast.success('QR code downloaded!')
+      toast.success('QR downloaded!')
     } else if (settings.format === 'svg' && svgContent) {
       const blob = new Blob([svgContent], { type: 'image/svg+xml' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = `gitolink-${username}-qr.svg`
-      document.body.appendChild(link)
       link.click()
-      document.body.removeChild(link)
       URL.revokeObjectURL(url)
-      toast.success('QR code downloaded!')
+      toast.success('QR downloaded!')
     }
   }
 
@@ -127,106 +198,12 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
     try {
       await navigator.clipboard.writeText(profileUrl)
       setCopied(true)
-      toast.success('Profile URL copied!')
+      toast.success('URL copied!')
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('Failed to copy URL')
+      toast.error('Failed to copy')
     }
   }
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-
-    const qrContent = settings.format === 'png' 
-      ? `<img src="${qrDataUrl}" style="max-width: 100%; height: auto;" />`
-      : svgContent
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Print QR Code - ${username}</title>
-          <style>
-            body {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
-              margin: 0;
-              font-family: system-ui, -apple-system, sans-serif;
-              background: white;
-            }
-            .qr-container {
-              padding: 40px;
-              text-align: center;
-            }
-            .qr-code {
-              margin: 20px 0;
-            }
-            .username {
-              font-size: 24px;
-              font-weight: bold;
-              margin-bottom: 10px;
-            }
-            .url {
-              font-size: 14px;
-              color: #666;
-              word-break: break-all;
-            }
-            .footer {
-              margin-top: 30px;
-              font-size: 12px;
-              color: #999;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="qr-container">
-            <div class="username">@${username}</div>
-            <div class="qr-code">${qrContent}</div>
-            <div class="url">${profileUrl}</div>
-            <div class="footer">Scan to visit my GitoLink profile</div>
-          </div>
-          <script>window.print(); window.close();</script>
-        </body>
-      </html>
-    `)
-    printWindow.document.close()
-  }
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        // Convert data URL to blob for sharing
-        const response = await fetch(qrDataUrl)
-        const blob = await response.blob()
-        const file = new File([blob], `gitolink-${username}-qr.png`, { type: 'image/png' })
-        
-        await navigator.share({
-          title: `My GitoLink Profile - @${username}`,
-          text: `Check out my GitoLink profile: ${profileUrl}`,
-          url: profileUrl,
-          files: [file],
-        })
-      } catch (error) {
-        // User cancelled or share failed
-      }
-    } else {
-      handleCopyUrl()
-    }
-  }
-
-  const presetColors = [
-    { fg: '#000000', bg: '#ffffff', name: 'Classic' },
-    { fg: '#2563eb', bg: '#ffffff', name: 'Blue' },
-    { fg: '#7c3aed', bg: '#ffffff', name: 'Purple' },
-    { fg: '#059669', bg: '#ffffff', name: 'Green' },
-    { fg: '#dc2626', bg: '#ffffff', name: 'Red' },
-    { fg: '#000000', bg: '#dbeafe', name: 'Light Blue' },
-    { fg: '#000000', bg: '#f3e8ff', name: 'Light Purple' },
-    { fg: '#ffffff', bg: '#1f2937', name: 'Dark' },
-  ]
 
   if (!isOpen) return null
 
@@ -236,78 +213,56 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
         onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="glass-card w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl"
+          className="bg-[#0a0a0a] border border-gray-800 w-full max-w-4xl max-h-[90vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <FiSmartphone className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-[#00FF41] flex items-center justify-center">
+                <span className="text-black">{Icons.phone}</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">QR Code Generator</h2>
-                <p className="text-sm text-gray-400">Share your profile with a scan</p>
+                <h2 className="text-xl font-bold">QR CODE GENERATOR</h2>
+                <p className="text-sm text-gray-500 font-mono">Share your profile</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <FiX className="w-5 h-5" />
+            <button onClick={onClose} className="p-2 text-gray-500 hover:text-white">
+              {Icons.x}
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-white/10">
-            <button
-              onClick={() => setActiveTab('customize')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'customize'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <FiRefreshCw className="w-4 h-4" />
-                Customize
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('share')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'share'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <FiShare2 className="w-4 h-4" />
-                Share
-              </span>
-            </button>
+          <div className="flex border-b border-gray-800">
+            {(['customize', 'share'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 px-4 py-3 text-sm font-medium font-mono transition-colors
+                  ${activeTab === tab
+                    ? 'text-[#00FF41] border-b-2 border-[#00FF41]'
+                    : 'text-gray-500 hover:text-white'
+                  }`}
+              >
+                {tab.toUpperCase()}
+              </button>
+            ))}
           </div>
 
           <div className="flex flex-col lg:flex-row">
-            {/* Left Panel - Preview */}
-            <div className="flex-1 p-6 flex flex-col items-center justify-center bg-black/20 min-h-[400px]">
-              <div
-                ref={qrRef}
-                className="relative p-6 rounded-2xl bg-white shadow-2xl"
-                style={{
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                }}
-              >
+            {/* Preview Panel */}
+            <div className="flex-1 p-8 flex flex-col items-center justify-center bg-black min-h-[400px]">
+              <div className="relative p-6 bg-white shadow-2xl">
                 {isGenerating ? (
                   <div className="w-[300px] h-[300px] flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+                    {Icons.loader}
                   </div>
                 ) : settings.format === 'png' && qrDataUrl ? (
                   <img
@@ -320,18 +275,17 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
                   <div
                     dangerouslySetInnerHTML={{ __html: svgContent }}
                     style={{ width: sizeMap[settings.size], height: sizeMap[settings.size] }}
-                  />
+                  /
                 ) : null}
                 
-                {/* GitoLink branding on QR */}
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-1 rounded-full">
-                  <span className="text-xs font-bold text-white">GitoLink</span>
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-black px-4 py-1">
+                  <span className="text-xs font-mono text-white">GITOLINK</span>
                 </div>
               </div>
 
-              <div className="mt-6 text-center">
-                <p className="text-white font-medium">@{username}</p>
-                <p className="text-gray-400 text-sm mt-1">{profileUrl}</p>
+              <div className="mt-8 text-center">
+                <p className="font-bold">@{username}</p>
+                <p className="text-gray-500 text-sm mt-1 font-mono">{profileUrl}</p>
               </div>
 
               {/* Quick Actions */}
@@ -339,78 +293,60 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
                 <button
                   onClick={handleDownload}
                   disabled={isGenerating || (!qrDataUrl && !svgContent)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-black font-medium hover:bg-gray-200 disabled:opacity-50"
                 >
-                  <FiDownload className="w-4 h-4" />
-                  Download
+                  {Icons.download}
+                  DOWNLOAD
                 </button>
                 <button
-                  onClick={handlePrint}
+                  onClick={() => window.print()}
                   disabled={isGenerating || (!qrDataUrl && !svgContent)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50"
                 >
-                  <FiPrinter className="w-4 h-4" />
-                  Print
+                  {Icons.print}
+                  PRINT
                 </button>
-                {navigator.share && (
-                  <button
-                    onClick={handleShare}
-                    disabled={isGenerating || !qrDataUrl}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                  >
-                    <FiShare2 className="w-4 h-4" />
-                    Share
-                  </button>
-                )}
               </div>
             </div>
 
-            {/* Right Panel - Settings */}
-            <div className="w-full lg:w-80 p-6 border-t lg:border-t-0 lg:border-l border-white/10 overflow-y-auto max-h-[400px]">
+            {/* Settings Panel */}
+            <div className="w-full lg:w-80 p-6 border-t lg:border-t-0 lg:border-l border-gray-800 overflow-y-auto max-h-[400px]">
               {activeTab === 'customize' ? (
                 <div className="space-y-6">
                   {/* Format */}
                   <div>
-                    <label className="text-sm font-medium text-gray-300 mb-2 block">Format</label>
+                    <label className="text-xs font-mono text-gray-500 mb-2 block uppercase">Format</label>
                     <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => setSettings((s) => ({ ...s, format: 'png' }))}
-                        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          settings.format === 'png'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                        }`}
-                      >
-                        <FiImage className="w-4 h-4" />
-                        PNG
-                      </button>
-                      <button
-                        onClick={() => setSettings((s) => ({ ...s, format: 'svg' }))}
-                        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          settings.format === 'svg'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                        }`}
-                      >
-                        <FiCode className="w-4 h-4" />
-                        SVG
-                      </button>
+                      {(['png', 'svg'] as const).map((fmt) => (
+                        <button
+                          key={fmt}
+                          onClick={() => setSettings(s => ({ ...s, format: fmt }))}
+                          className={`flex items-center justify-center gap-2 px-3 py-2 text-sm transition-colors
+                            ${settings.format === fmt
+                              ? 'bg-[#00FF41] text-black font-medium'
+                              : 'bg-[#0a0a0a] text-gray-400 border border-gray-800 hover:border-gray-600'
+                            }`}
+                        >
+                          {fmt === 'png' ? Icons.image : Icons.code}
+                          {fmt.toUpperCase()}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
                   {/* Size */}
                   <div>
-                    <label className="text-sm font-medium text-gray-300 mb-2 block">Size</label>
+                    <label className="text-xs font-mono text-gray-500 mb-2 block uppercase">Size</label>
                     <div className="grid grid-cols-3 gap-2">
                       {(['small', 'medium', 'large'] as QRSize[]).map((size) => (
                         <button
                           key={size}
-                          onClick={() => setSettings((s) => ({ ...s, size }))}
-                          className={`px-3 py-2 rounded-lg text-sm capitalize transition-colors ${
-                            settings.size === size
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                          }`}
+                          onClick={() => setSettings(s => ({ ...s, size }))}
+                          className={`px-3 py-2 text-sm font-mono uppercase transition-colors
+                            ${settings.size === size
+                              ? 'bg-[#00FF41] text-black'
+                              : 'bg-[#0a0a0a] text-gray-400 border border-gray-800 hover:border-gray-600'
+                            }`}
                         >
                           {size}
                         </button>
@@ -420,33 +356,19 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
 
                   {/* Color Presets */}
                   <div>
-                    <label className="text-sm font-medium text-gray-300 mb-2 block">Color Presets</label>
+                    <label className="text-xs font-mono text-gray-500 mb-2 block uppercase">Color Presets</label>
                     <div className="grid grid-cols-4 gap-2">
                       {presetColors.map((preset) => (
                         <button
                           key={preset.name}
-                          onClick={() =>
-                            setSettings((s) => ({
-                              ...s,
-                              fgColor: preset.fg,
-                              bgColor: preset.bg,
-                            }))
-                          }
-                          className={`group relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
-                            settings.fgColor === preset.fg && settings.bgColor === preset.bg
-                              ? 'border-blue-500'
-                              : 'border-transparent hover:border-white/20'
-                          }`}
+                          onClick={() => setSettings(s => ({ ...s, fgColor: preset.fg, bgColor: preset.bg }))}
+                          className={`group relative w-full aspect-square overflow-hidden transition-all
+                            ${settings.fgColor === preset.fg && settings.bgColor === preset.bg
+                              ? 'ring-2 ring-[#00FF41]' : ''}`}
                           title={preset.name}
                         >
-                          <div
-                            className="absolute inset-0"
-                            style={{ backgroundColor: preset.bg }}
-                          />
-                          <div
-                            className="absolute inset-2 rounded"
-                            style={{ backgroundColor: preset.fg }}
-                          />
+                          <div className="absolute inset-0" style={{ backgroundColor: preset.bg }} />
+                          <div className="absolute inset-2" style={{ backgroundColor: preset.fg }} />
                         </button>
                       ))}
                     </div>
@@ -454,163 +376,128 @@ export default function QRCodeGenerator({ username, isOpen, onClose }: QRCodeGen
 
                   {/* Custom Colors */}
                   <div>
-                    <label className="text-sm font-medium text-gray-300 mb-2 block">Custom Colors</label>
+                    <label className="text-xs font-mono text-gray-500 mb-2 block uppercase">Custom Colors</label>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-400 w-12">FG</span>
-                        <div className="flex-1">
-                          <HexColorPicker
-                            color={settings.fgColor}
-                            onChange={(color) => setSettings((s) => ({ ...s, fgColor: color }))}
-                            style={{ width: '100%', height: '80px' }}
-                          />
-                        </div>
+                        <span className="text-xs font-mono text-gray-500 w-8">FG</span>
+                        <input
+                          type="color"
+                          value={settings.fgColor}
+                          onChange={(e) => setSettings(s => ({ ...s, fgColor: e.target.value }))}
+                          className="w-8 h-8 bg-transparent border-0 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={settings.fgColor}
+                          onChange={(e) => setSettings(s => ({ ...s, fgColor: e.target.value }))}
+                          className="flex-1 bg-black border border-gray-800 px-2 py-1 text-sm font-mono uppercase"
+                        />
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-400 w-12">BG</span>
-                        <div className="flex-1">
-                          <HexColorPicker
-                            color={settings.bgColor}
-                            onChange={(color) => setSettings((s) => ({ ...s, bgColor: color }))}
-                            style={{ width: '100%', height: '80px' }}
-                          />
-                        </div>
+                        <span className="text-xs font-mono text-gray-500 w-8">BG</span>
+                        <input
+                          type="color"
+                          value={settings.bgColor}
+                          onChange={(e) => setSettings(s => ({ ...s, bgColor: e.target.value }))}
+                          className="w-8 h-8 bg-transparent border-0 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={settings.bgColor}
+                          onChange={(e) => setSettings(s => ({ ...s, bgColor: e.target.value }))}
+                          className="flex-1 bg-black border border-gray-800 px-2 py-1 text-sm font-mono uppercase"
+                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* Error Correction */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-300 mb-2 block">Error Correction</label>
-                    <select
-                      value={settings.errorCorrectionLevel}
-                      onChange={(e) =>
-                        setSettings((s) => ({ ...s, errorCorrectionLevel: e.target.value as any }))
-                      }
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="L">Low (~7%)</option>
-                      <option value="M">Medium (~15%)</option>
-                      <option value="Q">Quartile (~25%)</option>
-                      <option value="H">High (~30%)</option>
-                    </select>
-                  </div>
-
                   {/* Margin Toggle */}
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-300">Include Margin</label>
+                    <label className="text-xs font-mono text-gray-500 uppercase">Include Margin</label>
                     <button
-                      onClick={() => setSettings((s) => ({ ...s, includeMargin: !s.includeMargin }))}
-                      className={`relative w-12 h-6 rounded-full transition-colors ${
-                        settings.includeMargin ? 'bg-blue-600' : 'bg-white/20'
+                      onClick={() => setSettings(s => ({ ...s, includeMargin: !s.includeMargin }))}
+                      className={`relative w-12 h-6 transition-colors ${
+                        settings.includeMargin ? 'bg-[#00FF41]' : 'bg-gray-800'
                       }`}
                     >
                       <span
-                        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                        className={`absolute top-1 w-4 h-4 bg-black transition-transform ${
                           settings.includeMargin ? 'translate-x-7' : 'translate-x-1'
                         }`}
                       />
                     </button>
                   </div>
 
-                  {/* Regenerate Button */}
+                  {/* Regenerate */}
                   <button
                     onClick={generateQR}
                     disabled={isGenerating}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-lg transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50"
                   >
-                    <FiRefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                    Regenerate
+                    <span className={isGenerating ? 'animate-spin' : ''}>{Icons.refresh}</span>
+                    REGENERATE
                   </button>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {/* Profile URL */}
                   <div>
-                    <label className="text-sm font-medium text-gray-300 mb-2 block">Profile URL</label>
+                    <label className="text-xs font-mono text-gray-500 mb-2 block uppercase">Profile URL</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         value={profileUrl}
                         readOnly
-                        className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none"
+                        className="flex-1 bg-black border border-gray-800 px-3 py-2 text-sm font-mono"
                       />
                       <button
                         onClick={handleCopyUrl}
-                        className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                        title="Copy URL"
+                        className="p-2 bg-[#00FF41] text-black hover:bg-[#00CC33]"
                       >
-                        {copied ? <FiCheck className="w-4 h-4" /> : <FiCopy className="w-4 h-4" />}
+                        {copied ? Icons.check : Icons.copy}
                       </button>
                     </div>
                   </div>
 
                   {/* Share Options */}
                   <div>
-                    <label className="text-sm font-medium text-gray-300 mb-2 block">Share Options</label>
+                    <label className="text-xs font-mono text-gray-500 mb-2 block uppercase">Share Options</label>
                     <div className="space-y-2">
                       <button
                         onClick={handleCopyUrl}
-                        className="w-full flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-gray-800 hover:border-gray-600 transition-colors text-left"
                       >
-                        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                          <FiCopy className="w-5 h-5 text-blue-400" />
-                        </div>
+                        <div className="w-10 h-10 bg-white/10 flex items-center justify-center">{Icons.copy}</div>
                         <div>
-                          <p className="text-white font-medium">Copy Link</p>
-                          <p className="text-gray-400 text-sm">Copy profile URL to clipboard</p>
+                          <p className="font-medium">Copy Link</p>
+                          <p className="text-xs text-gray-500 font-mono">Copy to clipboard</p>
                         </div>
                       </button>
 
                       <button
                         onClick={handleDownload}
-                        className="w-full flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-gray-800 hover:border-gray-600 transition-colors text-left"
                       >
-                        <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                          <FiDownload className="w-5 h-5 text-green-400" />
-                        </div>
+                        <div className="w-10 h-10 bg-[#00FF41] text-black flex items-center justify-center">{Icons.download}</div>
                         <div>
-                          <p className="text-white font-medium">Download QR</p>
-                          <p className="text-gray-400 text-sm">Save as PNG or SVG file</p>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={handlePrint}
-                        className="w-full flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-left"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                          <FiPrinter className="w-5 h-5 text-purple-400" />
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">Print QR Code</p>
-                          <p className="text-gray-400 text-sm">Print with custom branding</p>
+                          <p className="font-medium">Download QR</p>
+                          <p className="text-xs text-gray-500 font-mono">PNG or SVG</p>
                         </div>
                       </button>
 
                       {navigator.share && (
                         <button
-                          onClick={handleShare}
-                          className="w-full flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-left"
+                          onClick={() => navigator.share({ title: username, url: profileUrl })}
+                          className="w-full flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-gray-800 hover:border-gray-600 transition-colors text-left"
                         >
-                          <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                            <FiShare2 className="w-5 h-5 text-orange-400" />
-                          </div>
+                          <div className="w-10 h-10 bg-white/10 flex items-center justify-center">{Icons.share}</div>
                           <div>
-                            <p className="text-white font-medium">Share</p>
-                            <p className="text-gray-400 text-sm">Share via device options</p>
+                            <p className="font-medium">Share</p>
+                            <p className="text-xs text-gray-500 font-mono">Native share</p>
                           </div>
                         </button>
                       )}
                     </div>
-                  </div>
-
-                  {/* Tips */}
-                  <div className="p-4 bg-blue-500/10 rounded-xl">
-                    <p className="text-sm text-blue-300">
-                      <strong className="text-blue-400">Tip:</strong> Use high error correction levels
-                      if you plan to add a logo or image to your QR code.
-                    </p>
                   </div>
                 </div>
               )}
