@@ -10,18 +10,128 @@ import LinkList from '@/components/dashboard/LinkList'
 import AddLinkModal from '@/components/dashboard/AddLinkModal'
 import QRCodeGenerator from '@/components/qr/QRCodeGenerator'
 import LinkAnalytics from '@/components/dashboard/LinkAnalytics'
-import {
-  FiPlus, FiLogOut, FiExternalLink, FiCopy, FiBarChart2, FiImage,
-  FiTrendingUp, FiUser, FiLink, FiSettings, FiEye,
-  FiTrash2, FiEdit2, FiCheck, FiX, FiChevronUp, FiChevronDown, FiSmartphone, FiLayers,
-  FiLayout, FiType, FiDownload, FiCalendar, FiArrowUp, FiArrowDown, FiGrid
-} from 'react-icons/fi'
 import type { User, Link as LinkType, DesignCustomization } from '@/types'
 import { themes } from '@/lib/utils'
 import DesignTab from '@/components/dashboard/DesignTab'
 
+// SVG Icons (Neo-brutalist style)
+const Icons = {
+  plus: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  ),
+  logout: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  ),
+  external: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  ),
+  copy: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  ),
+  chart: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  ),
+  image: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  ),
+  link: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  ),
+  layout: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="9" y1="21" x2="9" y2="9" />
+    </svg>
+  ),
+  grid: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  ),
+  check: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  download: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+  arrowUp: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <line x1="12" y1="19" x2="12" y2="5" />
+      <polyline points="5 12 12 5 19 12" />
+    </svg>
+  ),
+  arrowDown: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <polyline points="19 12 12 19 5 12" />
+    </svg>
+  ),
+  trending: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
+    </svg>
+  ),
+  layers: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  ),
+  calendar: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  barChart: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-16 h-16">
+      <line x1="12" y1="20" x2="12" y2="10" />
+      <line x1="18" y1="20" x2="18" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="16" />
+    </svg>
+  )
+}
+
 const iconMap: Record<string, React.ComponentType> = {
-  website: FiExternalLink,
+  website: () => Icons.external,
 }
 
 type TabType = 'links' | 'appearance' | 'analytics' | 'design'
@@ -34,12 +144,11 @@ interface AnalyticsData {
   timelineData: { date: string; count: number }[]
 }
 
-// Type for optimistic links
 interface OptimisticLink extends LinkType {
   isOptimistic?: boolean
   isUpdating?: boolean
   isDeleting?: boolean
-  originalData?: LinkType // Store original data for rollback
+  originalData?: LinkType
 }
 
 export default function DashboardPage() {
@@ -103,7 +212,6 @@ export default function DashboardPage() {
     finally { setAnalyticsLoading(false) }
   }
 
-  // ============ OPTIMISTIC ADD LINK ============
   const handleAddLink = async (formData: { title: string; url: string; icon?: string }) => {
     const tempId = `temp-${Date.now()}`
     const optimisticLink: OptimisticLink = {
@@ -120,13 +228,11 @@ export default function DashboardPage() {
       isOptimistic: true,
     }
 
-    // Optimistically add to UI
     setLinks(prev => [...prev, optimisticLink])
     setShowAddModal(false)
     toast.success('Link added!')
 
     try {
-      // Save to server
       const res = await fetch('/api/links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,31 +245,21 @@ export default function DashboardPage() {
       }
 
       const { link: savedLink } = await res.json()
-      
-      // Replace temp with real
       setLinks(prev => prev.map(l => l.id === tempId ? { ...savedLink, _count: { clicks: 0 } } : l))
       toast.success('Link saved to server')
     } catch (error) {
-      // Rollback on error
       setLinks(prev => prev.filter(l => l.id !== tempId))
       toast.error(error instanceof Error ? error.message : 'Failed to add link')
-      setShowAddModal(true) // Re-open modal so user can retry
+      setShowAddModal(true)
     }
   }
 
-  // ============ OPTIMISTIC UPDATE LINK ============
   const handleUpdateLink = async (id: string, updates: Partial<LinkType>) => {
     const linkToUpdate = links.find(l => l.id === id)
     if (!linkToUpdate) return
 
     const originalData = { ...linkToUpdate }
-
-    // Optimistically update UI
-    setLinks(prev => prev.map(l => 
-      l.id === id 
-        ? { ...l, ...updates, isUpdating: true, originalData } 
-        : l
-    ))
+    setLinks(prev => prev.map(l => l.id === id ? { ...l, ...updates, isUpdating: true, originalData } : l))
 
     try {
       const res = await fetch(`/api/links/${id}`, {
@@ -178,59 +274,34 @@ export default function DashboardPage() {
       }
 
       const { link: updatedLink } = await res.json()
-      
-      // Update with server data and remove updating state
-      setLinks(prev => prev.map(l => 
-        l.id === id 
-          ? { ...updatedLink, _count: l._count, isUpdating: false, originalData: undefined } 
-          : l
-      ))
+      setLinks(prev => prev.map(l => l.id === id ? { ...updatedLink, _count: l._count, isUpdating: false, originalData: undefined } : l))
       toast.success('Link updated')
     } catch (error) {
-      // Rollback on error
-      setLinks(prev => prev.map(l => 
-        l.id === id && l.originalData 
-          ? { ...l.originalData, isUpdating: false, originalData: undefined } 
-          : l
-      ))
+      setLinks(prev => prev.map(l => l.id === id && l.originalData ? { ...l.originalData, isUpdating: false, originalData: undefined } : l))
       toast.error(error instanceof Error ? error.message : 'Failed to update link')
     }
   }
 
-  // ============ OPTIMISTIC DELETE LINK ============
   const handleDeleteLink = async (id: string) => {
     const linkToDelete = links.find(l => l.id === id)
     if (!linkToDelete) return
 
     const originalLinks = [...links]
-
-    // Optimistically remove from UI
     setLinks(prev => prev.filter(l => l.id !== id))
     toast.success('Link deleted')
 
     try {
-      const res = await fetch(`/api/links/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!res.ok) {
-        throw new Error('Failed to delete link')
-      }
+      const res = await fetch(`/api/links/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete link')
     } catch (error) {
-      // Rollback on error
       setLinks(originalLinks)
       toast.error('Failed to delete link')
     }
   }
 
-  // ============ OPTIMISTIC REORDER LINKS ============
   const handleReorderLinks = async (newOrder: string[]) => {
     const originalLinks = [...links]
-    
-    // Create a map for quick lookup
     const linkMap = new Map(links.map(l => [l.id, l]))
-    
-    // Optimistically reorder UI
     const reorderedLinks = newOrder
       .map(id => linkMap.get(id))
       .filter((l): l is OptimisticLink => l !== undefined)
@@ -239,7 +310,6 @@ export default function DashboardPage() {
     setLinks(reorderedLinks)
 
     try {
-      // Save new order to server
       await fetch(`/api/links/${newOrder[0]}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -247,23 +317,17 @@ export default function DashboardPage() {
       })
       toast.success('Order saved')
     } catch (error) {
-      // Rollback on error
       setLinks(originalLinks)
       toast.error('Failed to reorder links')
     }
   }
 
-  // ============ OPTIMISTIC TOGGLE ACTIVE ============
   const handleToggleActive = async (id: string) => {
     const link = links.find(l => l.id === id)
     if (!link) return
 
     const newActiveState = !link.active
-    
-    // Optimistically toggle
-    setLinks(prev => prev.map(l => 
-      l.id === id ? { ...l, active: newActiveState } : l
-    ))
+    setLinks(prev => prev.map(l => l.id === id ? { ...l, active: newActiveState } : l))
 
     try {
       const res = await fetch(`/api/links/${id}`, {
@@ -271,15 +335,10 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: newActiveState }),
       })
-
       if (!res.ok) throw new Error('Failed to update')
-      
       toast.success(newActiveState ? 'Link visible' : 'Link hidden')
     } catch (error) {
-      // Rollback
-      setLinks(prev => prev.map(l => 
-        l.id === id ? { ...l, active: !newActiveState } : l
-      ))
+      setLinks(prev => prev.map(l => l.id === id ? { ...l, active: !newActiveState } : l))
       toast.error('Failed to update link')
     }
   }
@@ -291,8 +350,6 @@ export default function DashboardPage() {
 
   const handleThemeChange = async (themeId: string) => {
     const originalTheme = user?.theme
-    
-    // Optimistically update theme
     setUser(prev => prev ? { ...prev, theme: themeId } : null)
     setPreviewTheme(themeId)
 
@@ -305,7 +362,6 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error('Failed to update theme')
       toast.success('Theme updated!')
     } catch {
-      // Rollback
       setUser(prev => prev ? { ...prev, theme: originalTheme || 'cyberpunk' } : null)
       setPreviewTheme(originalTheme || 'cyberpunk')
       toast.error('Failed to update theme')
@@ -314,8 +370,6 @@ export default function DashboardPage() {
 
   const handleDesignUpdate = async (design: Partial<DesignCustomization>) => {
     const originalUser = user ? { ...user } : null
-    
-    // Optimistically update design
     setUser(prev => prev ? { ...prev, ...design } : null)
 
     try {
@@ -334,24 +388,18 @@ export default function DashboardPage() {
       setUser(prev => prev ? { ...prev, ...data.user } : null)
       return data.user
     } catch (error: any) {
-      // Rollback on error
-      if (originalUser) {
-        setUser(originalUser)
-      }
+      if (originalUser) setUser(originalUser)
       throw error
     }
   }
 
-  // Export analytics data as CSV
   const exportAnalytics = () => {
     if (!analytics) return
 
     const csvRows = [
       ['Link Title', 'Clicks', 'Share %', 'Link URL'],
       ...analytics.clicksPerLink.map(link => {
-        const share = analytics.totalClicks > 0 
-          ? ((link.count / analytics.totalClicks) * 100).toFixed(1)
-          : '0'
+        const share = analytics.totalClicks > 0 ? ((link.count / analytics.totalClicks) * 100).toFixed(1) : '0'
         const linkData = links.find(l => l.id === link.linkId)
         return [link.title, link.count.toString(), `${share}%`, linkData?.url || '']
       })
@@ -374,23 +422,29 @@ export default function DashboardPage() {
     return <DashboardSkeleton />
   }
 
-  const themeObj = themes.find(t => t.id === displayTheme) || themes[0]
-
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-black/80 border-b border-white/10">
+      <header className="sticky top-0 z-40 bg-black border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-white">
-            <span className="text-blue-400">Gito</span>Link
+          <Link href="/" className="text-xl font-bold tracking-tight">
+            GitoLink
           </Link>
           <div className="flex items-center gap-3">
-            <a href={`/${user.username}`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700 transition-all">
-              <FiExternalLink className="w-4 h-4" />
+            <a 
+              href={`/${user.username}`} 
+              target="_blank" 
+              className="flex items-center gap-2 px-4 py-2 bg-white text-black font-medium hover:bg-gray-200 transition-colors"
+            >
+              {Icons.external}
               <span className="hidden sm:inline text-sm">View Profile</span>
             </a>
-            <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-white transition-colors">
-              <FiLogOut className="w-5 h-5" />
+            <button 
+              onClick={handleLogout} 
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+              title="Logout"
+            >
+              {Icons.logout}
             </button>
           </div>
         </div>
@@ -400,48 +454,58 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-[280px_1fr] gap-8">
           {/* Sidebar */}
           <aside>
-            <div className="glass-card rounded-2xl p-6 sticky top-24">
+            <div className="bg-[#0a0a0a] border border-gray-800 p-6 sticky top-24">
               <div className="text-center mb-6">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-white">
+                <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center text-2xl font-bold bg-gray-800 border-2 border-gray-700">
                   {user.name?.[0] || user.username[0].toUpperCase()}
                 </div>
-                <h2 className="text-lg font-semibold text-white">{user.name || user.username}</h2>
-                <p className="text-gray-400 text-sm">@{user.username}</p>
+                <h2 className="text-lg font-semibold">{user.name || user.username}</h2>
+                <p className="text-gray-500 text-sm font-mono">@{user.username}</p>
               </div>
 
-              <nav className="space-y-2">
+              <nav className="space-y-1">
                 {[
-                  { id: 'links' as TabType, label: 'My Links', icon: FiLink },
-                  { id: 'appearance' as TabType, label: 'Appearance', icon: FiImage },
-                  { id: 'design' as TabType, label: 'Design', icon: FiLayout },
-                  { id: 'analytics' as TabType, label: 'Analytics', icon: FiBarChart2 },
+                  { id: 'links' as TabType, label: 'My Links', icon: Icons.link },
+                  { id: 'appearance' as TabType, label: 'Appearance', icon: Icons.image },
+                  { id: 'design' as TabType, label: 'Design', icon: Icons.layout },
+                  { id: 'analytics' as TabType, label: 'Analytics', icon: Icons.chart },
                 ].map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                      activeTab === item.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    className={`w-full flex items-center gap-3 px-4 py-3 transition-all ${
+                      activeTab === item.id 
+                        ? 'bg-white text-black font-medium' 
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                     }`}
                   >
-                    <item.icon className="w-5 h-5" />
+                    <span>{item.icon}</span>
                     <span>{item.label}</span>
                   </button>
                 ))}
               </nav>
 
-              <div className="mt-6 pt-6 border-t border-white/10">
-                <p className="text-xs text-gray-500 mb-2">Your profile URL:</p>
-                <div className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2">
-                  <span className="text-sm text-gray-400 truncate flex-1">gitolink.vercel.app/{user.username}</span>
-                  <button onClick={() => { navigator.clipboard.writeText(`https://gitolink.vercel.app/${user.username}`); toast.success('Copied!') }}>
-                    <FiCopy className="w-4 h-4 text-gray-400 hover:text-white" />
+              <div className="mt-6 pt-6 border-t border-gray-800">
+                <p className="text-xs text-gray-500 mb-2 font-mono uppercase tracking-wider">Your URL</p>
+                <div className="flex items-center gap-2 bg-black border border-gray-800 px-3 py-2">
+                  <span className="text-sm text-gray-400 truncate flex-1 font-mono">
+                    gitolink.vercel.app/{user.username}
+                  </span>
+                  <button 
+                    onClick={() => { 
+                      navigator.clipboard.writeText(`https://gitolink.vercel.app/${user.username}`)
+                      toast.success('Copied!')
+                    }}
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    {Icons.copy}
                   </button>
                 </div>
                 <button
                   onClick={() => setShowQRModal(true)}
-                  className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all"
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 bg-[#00FF41] text-black font-bold hover:bg-[#00CC33] transition-colors"
                 >
-                  <FiGrid className="w-4 h-4" />
+                  {Icons.grid}
                   QR Code
                 </button>
               </div>
@@ -453,28 +517,33 @@ export default function DashboardPage() {
             <AnimatePresence mode="wait">
               {/* Links Tab */}
               {activeTab === 'links' && (
-                <motion.div key="links" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <motion.div 
+                  key="links" 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }}
+                >
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h1 className="text-2xl font-bold text-white">Your Links</h1>
-                      <p className="text-gray-400 text-sm">Manage and organize your links</p>
+                      <h1 className="text-2xl font-bold">YOUR LINKS</h1>
+                      <div className="w-12 h-[2px] bg-[#00FF41] mt-2" />
                     </div>
                     <button
                       onClick={() => setShowAddModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-4 py-3 bg-white text-black font-medium hover:bg-gray-200 transition-colors"
                     >
-                      <FiPlus className="w-5 h-5" />
+                      {Icons.plus}
                       Add Link
                     </button>
                   </div>
 
                   {links.length === 0 ? (
-                    <div className="glass-card rounded-2xl p-12 text-center">
-                      <FiLink className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400 mb-4">No links yet</p>
+                    <div className="bg-[#0a0a0a] border border-gray-800 p-12 text-center">
+                      <div className="text-gray-600 mb-4">{Icons.link}</div>
+                      <p className="text-gray-400 mb-4 font-mono">No links yet</p>
                       <button
                         onClick={() => setShowAddModal(true)}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        className="px-6 py-3 bg-white text-black font-medium hover:bg-gray-200 transition-colors"
                       >
                         Add Your First Link
                       </button>
@@ -493,30 +562,39 @@ export default function DashboardPage() {
 
               {/* Appearance Tab */}
               {activeTab === 'appearance' && (
-                <motion.div key="appearance" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <motion.div 
+                  key="appearance" 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }}
+                >
                   <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-white">Appearance</h1>
-                    <p className="text-gray-400 text-sm">Customize your profile look</p>
+                    <h1 className="text-2xl font-bold">APPEARANCE</h1>
+                    <div className="w-12 h-[2px] bg-[#00FF41] mt-2" />
+                    <p className="text-gray-400 mt-2 font-mono text-sm">Choose a theme for your profile</p>
                   </div>
 
-                  <div className="glass-card rounded-2xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Choose Theme</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="bg-[#0a0a0a] border border-gray-800 p-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {themes.map((theme) => (
                         <button
                           key={theme.id}
                           onClick={() => handleThemeChange(theme.id)}
                           onMouseEnter={() => setPreviewTheme(theme.id)}
                           onMouseLeave={() => setPreviewTheme(user.theme)}
-                          className={`relative h-20 rounded-xl overflow-hidden transition-all ${
-                            user.theme === theme.id ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900' : ''
+                          className={`relative h-24 overflow-hidden border-2 transition-all ${
+                            user.theme === theme.id 
+                              ? 'border-[#00FF41]' 
+                              : 'border-gray-800 hover:border-gray-600'
                           }`}
                         >
                           <div className={`absolute inset-0 ${theme.class}`} />
-                          <span className="relative z-10 text-sm font-medium text-white drop-shadow-md">{theme.name}</span>
+                          <span className="absolute bottom-0 left-0 right-0 p-2 bg-black/80 text-xs font-mono truncate">
+                            {theme.name}
+                          </span>
                           {user.theme === theme.id && (
-                            <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                              <FiCheck className="w-3 h-3 text-white" />
+                            <div className="absolute top-2 right-2 w-5 h-5 bg-[#00FF41] flex items-center justify-center">
+                              <span className="text-black">{Icons.check}</span>
                             </div>
                           )}
                         </button>
@@ -528,7 +606,12 @@ export default function DashboardPage() {
 
               {/* Design Tab */}
               {activeTab === 'design' && (
-                <motion.div key="design" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <motion.div 
+                  key="design" 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }}
+                >
                   <DesignTab 
                     user={{
                       layout: user.layout,
@@ -548,36 +631,39 @@ export default function DashboardPage() {
 
               {/* Analytics Tab */}
               {activeTab === 'analytics' && (
-                <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <motion.div 
+                  key="analytics" 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }}
+                >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
-                      <h1 className="text-2xl font-bold text-white">Analytics</h1>
-                      <p className="text-gray-400 text-sm">Track your link performance</p>
+                      <h1 className="text-2xl font-bold">ANALYTICS</h1>
+                      <div className="w-12 h-[2px] bg-[#00FF41] mt-2" />
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* Time Range Filter */}
-                      <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
+                      <div className="flex items-center gap-1 border border-gray-800">
                         {[7, 30, 90].map((days) => (
                           <button
                             key={days}
                             onClick={() => setAnalyticsDays(days)}
-                            className={`px-3 py-1.5 rounded-md text-sm transition-all ${
+                            className={`px-3 py-2 text-sm font-mono transition-all ${
                               analyticsDays === days
-                                ? 'bg-blue-600 text-white'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-white text-black'
+                                : 'text-gray-400 hover:text-white hover:bg-gray-800'
                             }`}
                           >
                             {days}d
                           </button>
                         ))}
                       </div>
-                      {/* Export Button */}
                       <button
                         onClick={exportAnalytics}
                         disabled={!analytics || analyticsLoading}
-                        className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-3 py-2 border border-gray-800 text-gray-300 hover:bg-gray-800 transition-colors disabled:opacity-50"
                       >
-                        <FiDownload className="w-4 h-4" />
+                        {Icons.download}
                         <span className="hidden sm:inline text-sm">Export</span>
                       </button>
                     </div>
@@ -590,104 +676,71 @@ export default function DashboardPage() {
                       {/* Stats Cards */}
                       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         {[
-                          { label: 'Total Clicks', value: analytics.totalClicks, icon: FiTrendingUp, color: 'from-blue-500 to-cyan-500' },
-                          { label: 'Active Links', value: links.filter(l => l.active).length, icon: FiLink, color: 'from-purple-500 to-pink-500' },
-                          { label: 'Total Links', value: links.length, icon: FiLayers, color: 'from-orange-500 to-red-500' },
-                          { label: 'Avg Per Day', value: Math.round(analytics.totalClicks / analyticsDays), icon: FiCalendar, color: 'from-green-500 to-emerald-500' },
+                          { label: 'Total Clicks', value: analytics.totalClicks, icon: Icons.trending },
+                          { label: 'Active Links', value: links.filter(l => l.active).length, icon: Icons.link },
+                          { label: 'Total Links', value: links.length, icon: Icons.layers },
+                          { label: 'Avg Per Day', value: Math.round(analytics.totalClicks / analyticsDays), icon: Icons.calendar },
                         ].map((stat, i) => (
                           <motion.div
                             key={stat.label}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.1 }}
-                            className="glass-card rounded-2xl p-5"
+                            className="bg-[#0a0a0a] border border-gray-800 p-5"
                           >
-                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-                              <stat.icon className="w-5 h-5 text-white" />
-                            </div>
-                            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
-                            <p className="text-gray-400 text-sm">{stat.label}</p>
+                            <div className="text-gray-500 mb-3">{stat.icon}</div>
+                            <p className="text-3xl font-bold mb-1">{stat.value}</p>
+                            <p className="text-gray-500 text-sm font-mono">{stat.label}</p>
                           </motion.div>
                         ))}
                       </div>
 
-                      {/* Links Performance Section */}
-                      <div className="glass-card rounded-2xl p-6 mb-6">
+                      {/* Links Performance */}
+                      <div className="bg-[#0a0a0a] border border-gray-800 p-6 mb-6">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                           <div>
-                            <h3 className="text-lg font-semibold text-white">Links Performance</h3>
-                            <p className="text-gray-400 text-sm">Click statistics for each link</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400 text-sm">Sort by:</span>
-                            <select
-                              value={analyticsSortBy}
-                              onChange={(e) => setAnalyticsSortBy(e.target.value as 'clicks' | 'name')}
-                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
-                            >
-                              <option value="clicks" className="bg-gray-900">Clicks</option>
-                              <option value="name" className="bg-gray-900">Name</option>
-                            </select>
-                            <button
-                              onClick={() => setAnalyticsSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                              className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
-                            >
-                              {analyticsSortOrder === 'desc' ? <FiArrowDown className="w-4 h-4" /> : <FiArrowUp className="w-4 h-4" />}
-                            </button>
+                            <h3 className="text-lg font-bold">LINK PERFORMANCE</h3>
+                            <p className="text-gray-500 text-sm font-mono">Click statistics for each link</p>
                           </div>
                         </div>
 
-                        {/* Bar Chart for Clicks Per Link */}
                         {analytics.clicksPerLink.length > 0 && (
-                          <div className="mb-8">
-                            <div className="space-y-3">
-                              {analytics.clicksPerLink
-                                .sort((a, b) => b.count - a.count)
-                                .slice(0, 10)
-                                .map((link, i) => {
-                                  const maxClicks = Math.max(...analytics.clicksPerLink.map(l => l.count))
-                                  const percentage = maxClicks > 0 ? (link.count / maxClicks) * 100 : 0
-                                  const sharePercentage = analytics.totalClicks > 0 
-                                    ? Math.round((link.count / analytics.totalClicks) * 100) 
-                                    : 0
-                                  
-                                  return (
-                                    <div key={link.linkId} className="flex items-center gap-4">
-                                      <span className="text-gray-500 w-6 text-sm">#{i + 1}</span>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between mb-1">
-                                          <p className="text-white font-medium truncate text-sm">{link.title}</p>
-                                          <div className="flex items-center gap-3">
-                                            <span className="text-gray-400 text-xs">{sharePercentage}%</span>
-                                            <span className="text-white font-bold text-sm w-12 text-right">{link.count}</span>
-                                          </div>
-                                        </div>
-                                        <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
-                                          <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${Math.max(percentage, 5)}%` }}
-                                            transition={{ duration: 0.5, delay: i * 0.05 }}
-                                            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full"
-                                          />
+                          <div className="space-y-3">
+                            {analytics.clicksPerLink
+                              .sort((a, b) => b.count - a.count)
+                              .slice(0, 10)
+                              .map((link, i) => {
+                                const maxClicks = Math.max(...analytics.clicksPerLink.map(l => l.count))
+                                const percentage = maxClicks > 0 ? (link.count / maxClicks) * 100 : 0
+                                const sharePercentage = analytics.totalClicks > 0 
+                                  ? Math.round((link.count / analytics.totalClicks) * 100) 
+                                  : 0
+                                
+                                return (
+                                  <div key={link.linkId} className="flex items-center gap-4">
+                                    <span className="text-gray-600 w-6 text-sm font-mono">#{i + 1}</span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <p className="font-medium truncate text-sm">{link.title}</p>
+                                        <div className="flex items-center gap-3">
+                                          <span className="text-gray-500 text-xs font-mono">{sharePercentage}%</span>
+                                          <span className="font-bold text-sm w-12 text-right">{link.count}</span>
                                         </div>
                                       </div>
+                                      <div className="h-2 bg-gray-800 overflow-hidden">
+                                        <motion.div
+                                          initial={{ width: 0 }}
+                                          animate={{ width: `${Math.max(percentage, 5)}%` }}
+                                          transition={{ duration: 0.5, delay: i * 0.05 }}
+                                          className="h-full bg-[#00FF41]"
+                                        />
+                                      </div>
                                     </div>
-                                  )
-                                })}
-                            </div>
+                                  </div>
+                                )
+                              })}
                           </div>
                         )}
-
-                        {/* Detailed Link Cards */}
-                        <LinkAnalytics 
-                          links={analytics.clicksPerLink.map(link => ({
-                            ...link,
-                            url: links.find(l => l.id === link.linkId)?.url
-                          }))}
-                          totalClicks={analytics.totalClicks}
-                          sortBy={analyticsSortBy}
-                          sortOrder={analyticsSortOrder}
-                        />
                       </div>
 
                       {/* Device & Browser Stats */}
@@ -697,9 +750,9 @@ export default function DashboardPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
-                            className="glass-card rounded-2xl p-6"
+                            className="bg-[#0a0a0a] border border-gray-800 p-6"
                           >
-                            <h3 className="text-lg font-semibold text-white mb-4">Devices</h3>
+                            <h3 className="text-lg font-bold mb-4">DEVICES</h3>
                             <div className="space-y-3">
                               {analytics.deviceStats
                                 .sort((a, b) => b.count - a.count)
@@ -711,13 +764,13 @@ export default function DashboardPage() {
                                     <div key={stat.device} className="flex items-center gap-3">
                                       <span className="text-gray-300 text-sm flex-1">{stat.device}</span>
                                       <div className="flex items-center gap-2">
-                                        <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                        <div className="w-24 h-2 bg-gray-800 overflow-hidden">
                                           <div 
-                                            className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                                            className="h-full bg-gray-600"
                                             style={{ width: `${percentage}%` }}
                                           />
                                         </div>
-                                        <span className="text-white font-medium text-sm w-10 text-right">{stat.count}</span>
+                                        <span className="font-medium text-sm w-10 text-right font-mono">{stat.count}</span>
                                       </div>
                                     </div>
                                   )
@@ -731,9 +784,9 @@ export default function DashboardPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
-                            className="glass-card rounded-2xl p-6"
+                            className="bg-[#0a0a0a] border border-gray-800 p-6"
                           >
-                            <h3 className="text-lg font-semibold text-white mb-4">Browsers</h3>
+                            <h3 className="text-lg font-bold mb-4">BROWSERS</h3>
                             <div className="space-y-3">
                               {analytics.browserStats
                                 .sort((a, b) => b.count - a.count)
@@ -745,13 +798,13 @@ export default function DashboardPage() {
                                     <div key={stat.browser} className="flex items-center gap-3">
                                       <span className="text-gray-300 text-sm flex-1">{stat.browser}</span>
                                       <div className="flex items-center gap-2">
-                                        <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                        <div className="w-24 h-2 bg-gray-800 overflow-hidden">
                                           <div 
-                                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+                                            className="h-full bg-gray-600"
                                             style={{ width: `${percentage}%` }}
                                           />
                                         </div>
-                                        <span className="text-white font-medium text-sm w-10 text-right">{stat.count}</span>
+                                        <span className="font-medium text-sm w-10 text-right font-mono">{stat.count}</span>
                                       </div>
                                     </div>
                                   )
@@ -762,10 +815,10 @@ export default function DashboardPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="glass-card rounded-2xl p-8 text-center">
-                      <FiBarChart2 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <div className="bg-[#0a0a0a] border border-gray-800 p-8 text-center">
+                      <div className="text-gray-600 mb-4">{Icons.barChart}</div>
                       <p className="text-gray-300 mb-2">No analytics data yet</p>
-                      <p className="text-gray-500 text-sm">Start sharing your profile to see analytics!</p>
+                      <p className="text-gray-500 text-sm font-mono">Start sharing your profile to see analytics!</p>
                     </div>
                   )}
                 </motion.div>
@@ -775,7 +828,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Add Link Modal */}
+      {/* Modals */}
       <AnimatePresence>
         {showAddModal && (
           <AddLinkModal
@@ -786,7 +839,6 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* QR Code Generator Modal */}
       {showQRModal && (
         <QRCodeGenerator
           username={user.username}
