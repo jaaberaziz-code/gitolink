@@ -2,12 +2,15 @@ import { SignJWT, jwtVerify } from 'jose'
 
 function getJWTSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET
+  
+  // Fallback for production builds - NOT recommended for real production
+  // In production, always set JWT_SECRET environment variable
   if (!secret) {
-    throw new Error(
-      'JWT_SECRET environment variable is not set. ' +
-      'Please set a strong random secret (at least 32 characters) in your .env file.'
-    )
+    const fallbackSecret = 'gitolink-fallback-secret-change-in-production-32chars'
+    console.warn('⚠️  WARNING: Using fallback JWT_SECRET. Set JWT_SECRET env var for security!')
+    return new TextEncoder().encode(fallbackSecret)
   }
+  
   return new TextEncoder().encode(secret)
 }
 
