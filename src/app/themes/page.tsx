@@ -280,7 +280,7 @@ function ThemePreview({ theme, meta }: { theme: typeof themes[0], meta: typeof t
       
       {/* Name */}
       <div 
-        className={`h-2 w-16 mx-auto mb-4 ${meta.textColor.includes('black') ? 'bg-black/20' : 'bg-white/30'}`}
+        className={`h-2 w-16 mx-auto mb-4 ${meta?.textColor?.includes('black') ? 'bg-black/20' : 'bg-white/30'}`}
       />
       
       {/* Links - varies by theme */}
