@@ -301,6 +301,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     if (bgType === 'solid' && bgValue) {
       return { backgroundColor: bgValue }
     }
+
+    // Custom gradient (when bgValue contains 'gradient')
+    if (bgType === 'gradient' && bgValue?.includes('gradient')) {
+      return { background: bgValue }
+    }
     
     return {}
   }
@@ -309,7 +314,16 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     const bgType = user.background_type || 'gradient'
     const bgValue = user.background_value || user.theme || 'cyberpunk'
 
-    if (bgType === 'gradient' || bgType === 'solid') {
+    // Don't apply theme class for custom gradients/solid colors - use inline styles instead
+    if (bgType === 'gradient' && bgValue?.includes('gradient')) {
+      return ''  // Custom gradient handled by inline style
+    }
+    
+    if (bgType === 'solid') {
+      return ''  // Solid color handled by inline style
+    }
+
+    if (bgType === 'gradient' || bgType === 'preset') {
       const theme = themes.find(t => t.id === bgValue)
       if (theme) {
         return theme.class
